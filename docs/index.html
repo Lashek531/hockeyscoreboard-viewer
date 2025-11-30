@@ -257,17 +257,19 @@
 
     // 2) JSON на Google Drive через Drive API
     //    ЗАМЕНИ FILE_ID и API_KEY на свои реальные значения
+
     const DRIVE_ACTIVE_GAME_URL =
-        "https://www.googleapis.com/drive/v3/files/1ZZWb0Ht1ZDa1w31Oa2WhtSMKaX7i6bYN?alt=media&key=AIzaSyAjoZ-RXrX1xeFJy1V2GiHtzFXrAd6L9yQ";
+    "https://www.googleapis.com/drive/v3/files/1ZZWb0Ht1ZDa1w31Oa2WhtSMKaX7i6bYN?alt=media&key=AIzaSyAjoZ-RXrX1xeFJy1V2GiHtzFXrAd6L9yQ";
+
 
     // 3) Переключатель: чем хотим пользоваться прямо сейчас
-    const USE_DRIVE = false;  // true = грузим с Google Drive, false = из локального файла
+    const USE_DRIVE = true;  // true = грузим с Google Drive, false = из локального файла
 
     // Итоговый URL для загрузки
     const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
 
     // Версия интерфейса — меняй при каждом изменении index.html
-    const UI_VERSION = "UI v0.5";
+    const UI_VERSION = "UI v0.6";
 
     // Интервал автообновления (мс)
     const REFRESH_INTERVAL_MS = 5000;

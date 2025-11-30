@@ -17,6 +17,15 @@ body {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    min-height: 100vh; /* растягиваем по высоте экрана */
+}
+
+/* Нижняя панель: меню + футер прижаты к низу */
+.bottom-panel {
+    margin-top: auto;              /* толкаем панель к низу */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Верхняя панель + меню */
@@ -246,4 +255,3 @@ body {
     opacity: 0.6;
     text-align: right;
 }
-

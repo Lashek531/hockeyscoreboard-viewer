@@ -20,16 +20,6 @@
         </div>
     </div>
 
-    <nav class="menu-bar">
-        <button class="menu-item" type="button">Завершённые игры</button>
-        <button class="menu-item" type="button">Лучшие бомбардиры</button>
-        <button class="menu-item" type="button">Лучшие снайперы</button>
-        <span class="menu-spacer"></span>
-        <button class="fs-btn" type="button" id="fsToggle">
-            ⛶ Полный экран
-        </button>
-    </nav>
-
     <div class="scoreboard">
         <div class="team">
             <div class="team-name red" id="teamRedName">Красные</div>
@@ -62,9 +52,22 @@
         </div>
     </div>
 
-    <div class="footer">
-        Автообновление каждые 5 секунд.
-        <span id="uiVersion"></span>
+    <!-- Нижняя панель: меню + футер прижаты к низу экрана -->
+    <div class="bottom-panel">
+        <nav class="menu-bar">
+            <button class="menu-item" type="button">Завершённые игры</button>
+            <button class="menu-item" type="button">Лучшие бомбардиры</button>
+            <button class="menu-item" type="button">Лучшие снайперы</button>
+            <span class="menu-spacer"></span>
+            <button class="fs-btn" type="button" id="fsToggle">
+                ⛶ Полный экран
+            </button>
+        </nav>
+
+        <div class="footer">
+            Автообновление каждые 5 секунд.
+            <span id="uiVersion"></span>
+        </div>
     </div>
 </div>
 

@@ -251,25 +251,21 @@
 
 <script>
     // ========== НАСТРОЙКИ ИСТОЧНИКА ДАННЫХ ==========
+// 1) Локальный JSON рядом с index.html (на всякий случай оставляем)
+const LOCAL_ACTIVE_GAME_URL = "./active-game.json";
 
-    // 1) Локальный JSON рядом с index.html (например, active-game.json в той же папке)
-    const LOCAL_ACTIVE_GAME_URL = "./active-game.json";
+// 2) JSON на Google Drive через публичную ссылку (БЕЗ API KEY)
+const DRIVE_ACTIVE_GAME_URL =
+    "https://drive.google.com/uc?export=download&id=1ZZWb0Ht1ZDa1w31Oa2WhtSMKaX7i6bYN";
 
-    // 2) JSON на Google Drive через Drive API
-    //    ЗАМЕНИ FILE_ID и API_KEY на свои реальные значения
+// сейчас хотим читать именно с Drive
+const USE_DRIVE = true;
 
-    const DRIVE_ACTIVE_GAME_URL =
-    "https://www.googleapis.com/drive/v3/files/1ZZWb0Ht1ZDa1w31Oa2WhtSMKaX7i6bYN?alt=media&key=AIzaSyAjoZ-RXrX1xeFJy1V2GiHtzFXrAd6L9yQ";
+const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
 
+// просто обнови версию, чтобы было видно, что HTML обновился
+const UI_VERSION = "UI v0.8 (drive-uc)";
 
-    // 3) Переключатель: чем хотим пользоваться прямо сейчас
-    const USE_DRIVE = true;  // true = грузим с Google Drive, false = из локального файла
-
-    // Итоговый URL для загрузки
-    const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
-
-    // Версия интерфейса — меняй при каждом изменении index.html
-    const UI_VERSION = "UI v0.6";
 
     // Интервал автообновления (мс)
     const REFRESH_INTERVAL_MS = 5000;

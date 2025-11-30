@@ -477,4 +477,12 @@
         } catch (e) {
             console.error(e);
             dom.stateMessage.classList.add("error");
-            dom.stateMessage
+            dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
+        }
+    }
+
+    loadData();
+    setInterval(loadData, REFRESH_INTERVAL_MS);
+</script>
+</body>
+</html>

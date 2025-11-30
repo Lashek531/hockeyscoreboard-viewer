@@ -243,9 +243,11 @@
         </div>
     </div>
 
-    <div class="footer">
-        Автообновление каждые 5 секунд. Источник: ActiveGame.json с Google Drive.
-    </div>
+<div class="footer">
+    Автообновление каждые 5 секунд. Источник: ActiveGame.json с Google Drive.
+    <span id="uiVersion"></span>
+</div>
+
 </div>
 
 <script>
@@ -254,7 +256,8 @@
     //const ACTIVE_GAME_URL = "https://drive.google.com/uc?export=download&id=1gXI_8--NTFxPcykag1NnlZWBD48m04wD";
     const ACTIVE_GAME_URL = "./active-game.json";
     //const ACTIVE_GAME_URL = "https://www.googleapis.com/drive/v3/files/1gXI_8--NTFxPcykag1NnlZWBD48m04wD?alt=media&key=ТВОЙ_API_KEY";
-
+   // Версия интерфейса — меняешь её при каждом изменении index.html
+    const UI_VERSION = "UI v0.1";
 
     
 
@@ -274,8 +277,12 @@
         rosterRed: document.getElementById("rosterRed"),
         rosterWhite: document.getElementById("rosterWhite"),
         eventsList: document.getElementById("eventsList"),
-        stateMessage: document.getElementById("stateMessage")
+        stateMessage: document.getElementById("stateMessage"),
+        uiVersion: document.getElementById("uiVersion")
     };
+
+    dom.uiVersion.textContent = " | Интерфейс " + UI_VERSION;
+
 
     function formatDate(iso) {
         if (!iso) return "";

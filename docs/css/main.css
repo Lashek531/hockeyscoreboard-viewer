@@ -1,1 +1,249 @@
+:root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color-scheme: dark;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    padding: 16px;
+    background: #050814;
+    color: #f5f5f5;
+}
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Верхняя панель + меню */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.arena {
+    font-size: 18px;
+    font-weight: 600;
+}
+.meta {
+    font-size: 14px;
+    opacity: 0.8;
+    text-align: right;
+}
+#gameId {
+    display: none; /* убираем название файла */
+}
+.status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: 1px solid rgba(255,255,255,0.3);
+    margin-top: 4px;
+}
+.status-finished {
+    background: rgba(0, 200, 83, 0.15);
+    border-color: rgba(0, 200, 83, 0.7);
+}
+.status-live {
+    background: rgba(244, 67, 54, 0.15);
+    border-color: rgba(244, 67, 54, 0.7);
+}
+.status-scheduled {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.7);
+}
+
+.menu-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+}
+.menu-item {
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: rgba(15,23,42,0.9);
+    color: #e2e8f0;
+    font-size: 13px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+.menu-item:hover {
+    background: rgba(30, 64, 175, 0.9);
+    border-color: rgba(191, 219, 254, 0.9);
+}
+.menu-spacer {
+    flex: 1 1 auto;
+}
+.fs-btn {
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.6);
+    background: rgba(15,23,42,0.9);
+    color: #e2e8f0;
+    font-size: 13px;
+    padding: 6px 12px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.fs-btn:hover {
+    background: rgba(15,118,110,0.9);
+    border-color: rgba(167,243,208,0.9);
+}
+
+.state {
+    font-size: 14px;
+    opacity: 0.85;
+    min-height: 1.2em; /* чтобы место не прыгало */
+}
+.state.error { color: #ff8a80; }
+.state.loading { color: #90caf9; }
+
+.scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    background: radial-gradient(circle at top, #273569 0, #050814 55%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+}
+.team {
+    text-align: center;
+}
+.team-name {
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.9;
+}
+.team-name.red { color: #ff5252; }
+.team-name.white { color: #ffffff; }
+.team-score {
+    font-size: 56px;
+    font-weight: 700;
+}
+.team-score.red { color: #ff5252; }
+.team-score.white { color: #ffffff; }
+.score-separator {
+    font-size: 24px;
+    opacity: 0.8;
+}
+
+.events-block {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: flex-start;
+}
+@media (max-width: 900px) {
+    .events-block {
+        grid-template-columns: 1fr;
+    }
+}
+.events-card, .roster-card {
+    background: rgba(15, 23, 42, 0.9);
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+}
+.card-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    opacity: 0.75;
+    margin-bottom: 8px;
+}
+.events-list {
+    max-height: 360px;
+    overflow-y: auto;
+    font-size: 14px;
+}
+.event-row {
+    display: grid;
+    grid-template-columns: 40px 70px minmax(0, 1fr);
+    gap: 6px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+.event-row:last-child {
+    border-bottom: none;
+}
+.event-order {
+    opacity: 0.6;
+}
+.event-score {
+    font-weight: 600;
+}
+.event-score.red { color: #ff8a80; }
+.event-score.white { color: #cfd8dc; }
+
+.event-desc strong {
+    font-weight: 600;
+}
+.event-tag {
+    display: inline-block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.5);
+    margin-right: 4px;
+    opacity: 0.8;
+}
+.event-tag.goal-red {
+    border-color: #ff8a80;
+    color: #ff8a80;
+}
+.event-tag.goal-white {
+    border-color: #eceff1;
+    color: #eceff1;
+}
+.event-tag.roster {
+    border-color: #90caf9;
+    color: #90caf9;
+}
+
+.roster-list {
+    font-size: 13px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px 24px;
+}
+.team-roster-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 4px;
+    opacity: 0.8;
+}
+.team-roster-title.red { color: #ff8a80; }
+.team-roster-title.white { color: #eceff1; }
+.players {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.players li {
+    padding: 1px 0;
+    opacity: 0.9;
+}
+.footer {
+    font-size: 11px;
+    opacity: 0.6;
+    text-align: right;
+}
 

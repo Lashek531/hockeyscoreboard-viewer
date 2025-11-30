@@ -5,54 +5,480 @@
     <title>Hockey Scoreboard Viewer</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
+        :root {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color-scheme: dark;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
             margin: 0;
-            padding: 0;
-            background: #0b1020;
-            color: #ffffff;
+            padding: 16px;
+            background: #050814;
+            color: #f5f5f5;
+        }
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .container {
-            text-align: center;
-            padding: 24px 32px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.04);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        .arena {
+            font-size: 18px;
+            font-weight: 600;
         }
-        h1 {
-            margin: 0 0 12px;
-            font-size: 32px;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
+        .meta {
+            font-size: 14px;
+            opacity: 0.8;
+            text-align: right;
         }
-        p {
-            margin: 4px 0;
-            font-size: 16px;
-            opacity: 0.85;
-        }
-        .badge {
+        .status {
             display: inline-block;
-            margin-top: 12px;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
             font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+        .status-finished {
+            background: rgba(0, 200, 83, 0.15);
+            border-color: rgba(0, 200, 83, 0.7);
+        }
+        .status-live {
+            background: rgba(244, 67, 54, 0.15);
+            border-color: rgba(244, 67, 54, 0.7);
+        }
+        .status-scheduled {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: rgba(255, 193, 7, 0.7);
+        }
+        .scoreboard {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-radius: 16px;
+            background: radial-gradient(circle at top, #273569 0, #050814 55%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        }
+        .team {
+            text-align: center;
+        }
+        .team-name {
+            font-size: 18px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
             opacity: 0.9;
         }
+        .team-name.red { color: #ff5252; }
+        .team-name.white { color: #ffffff; }
+        .team-score {
+            font-size: 56px;
+            font-weight: 700;
+        }
+        .team-score.red { color: #ff5252; }
+        .team-score.white { color: #ffffff; }
+        .score-separator {
+            font-size: 24px;
+            opacity: 0.8;
+        }
+        .events-block {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 16px;
+            align-items: flex-start;
+        }
+        @media (max-width: 900px) {
+            .events-block {
+                grid-template-columns: 1fr;
+            }
+        }
+        .events-card, .roster-card {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+        }
+        .card-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            opacity: 0.75;
+            margin-bottom: 8px;
+        }
+        .events-list {
+            max-height: 360px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        .event-row {
+            display: grid;
+            grid-template-columns: 40px 70px minmax(0, 1fr);
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        .event-row:last-child {
+            border-bottom: none;
+        }
+        .event-order {
+            opacity: 0.6;
+        }
+        .event-score {
+            font-weight: 600;
+        }
+        .event-score.red { color: #ff8a80; }
+        .event-score.white { color: #cfd8dc; }
+        .event-desc strong {
+            font-weight: 600;
+        }
+        .event-tag {
+            display: inline-block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            padding: 1px 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.5);
+            margin-right: 4px;
+            opacity: 0.8;
+        }
+        .event-tag.goal { border-color: #ff8a80; color: #ff8a80; }
+        .event-tag.roster { border-color: #90caf9; color: #90caf9; }
+        .roster-list {
+            font-size: 13px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px 24px;
+        }
+        .team-roster-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .team-roster-title.red { color: #ff8a80; }
+        .team-roster-title.white { color: #eceff1; }
+        .players {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .players li {
+            padding: 1px 0;
+            opacity: 0.9;
+        }
+        .footer {
+            font-size: 11px;
+            opacity: 0.6;
+            text-align: right;
+        }
+        .error, .loading {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .error { color: #ff8a80; }
+        .loading { color: #90caf9; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hockey Scoreboard Viewer</h1>
-        <p>Веб-просмотрщик хоккейного табло.</p>
-        <p>Сейчас здесь заглушка, позже подключим реальные данные.</p>
-        <div class="badge">stub / alpha</div>
+<div class="page">
+    <div class="top-bar">
+        <div>
+            <div class="arena" id="arenaName">Хоккейное табло</div>
+            <div class="meta" id="gameDate"></div>
+        </div>
+        <div class="meta">
+            <div id="gameId"></div>
+            <div class="status status-scheduled" id="gameStatus">Загрузка...</div>
+        </div>
     </div>
+
+    <div class="scoreboard">
+        <div class="team">
+            <div class="team-name red" id="teamRedName">Красные</div>
+            <div class="team-score red" id="teamRedScore">0</div>
+        </div>
+        <div class="score-separator">:</div>
+        <div class="team">
+            <div class="team-name white" id="teamWhiteName">Белые</div>
+            <div class="team-score white" id="teamWhiteScore">0</div>
+        </div>
+    </div>
+
+    <div id="stateMessage" class="loading">Загрузка данных...</div>
+
+    <div class="events-block">
+        <div class="events-card">
+            <div class="card-title">Протокол матча</div>
+            <div class="events-list" id="eventsList"></div>
+        </div>
+        <div class="roster-card">
+            <div class="card-title">Составы команд</div>
+            <div class="roster-list">
+                <div>
+                    <div class="team-roster-title red" id="rosterRedTitle">Красные</div>
+                    <ul class="players" id="rosterRed"></ul>
+                </div>
+                <div>
+                    <div class="team-roster-title white" id="rosterWhiteTitle">Белые</div>
+                    <ul class="players" id="rosterWhite"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Автообновление каждые 10 секунд. Источник: JSON с Google Drive.
+    </div>
+</div>
+
+<script>
+    // TODO: сюда нужно подставить реальную ссылку на JSON-файл в Google Drive
+    // Например: https://drive.google.com/uc?export=download&id=XXXXXXX
+    const DATA_URL = "https://example.com/active-game.json";
+
+    const REFRESH_INTERVAL_MS = 10000;
+
+    const dom = {
+        arenaName: document.getElementById("arenaName"),
+        gameDate: document.getElementById("gameDate"),
+        gameId: document.getElementById("gameId"),
+        gameStatus: document.getElementById("gameStatus"),
+        teamRedName: document.getElementById("teamRedName"),
+        teamWhiteName: document.getElementById("teamWhiteName"),
+        teamRedScore: document.getElementById("teamRedScore"),
+        teamWhiteScore: document.getElementById("teamWhiteScore"),
+        rosterRedTitle: document.getElementById("rosterRedTitle"),
+        rosterWhiteTitle: document.getElementById("rosterWhiteTitle"),
+        rosterRed: document.getElementById("rosterRed"),
+        rosterWhite: document.getElementById("rosterWhite"),
+        eventsList: document.getElementById("eventsList"),
+        stateMessage: document.getElementById("stateMessage")
+    };
+
+    function formatDate(iso) {
+        if (!iso) return "";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    }
+
+    function setStatus(finished, hasStarted) {
+        dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
+        if (finished) {
+            dom.gameStatus.classList.add("status-finished");
+            dom.gameStatus.textContent = "Матч завершён";
+        } else if (hasStarted) {
+            dom.gameStatus.classList.add("status-live");
+            dom.gameStatus.textContent = "Идёт матч";
+        } else {
+            dom.gameStatus.classList.add("status-scheduled");
+            dom.gameStatus.textContent = "Матч запланирован";
+        }
+    }
+
+    function computeScore(data) {
+        if (data.finalScore && typeof data.finalScore.RED === "number" && typeof data.finalScore.WHITE === "number") {
+            return {
+                red: data.finalScore.RED,
+                white: data.finalScore.WHITE
+            };
+        }
+        if (Array.isArray(data.goals) && data.goals.length > 0) {
+            const last = data.goals[data.goals.length - 1];
+            if (last.scoreAfter && typeof last.scoreAfter === "string") {
+                const parts = last.scoreAfter.split(":");
+                const red = parseInt(parts[0], 10);
+                const white = parseInt(parts[1], 10);
+                if (!isNaN(red) && !isNaN(white)) {
+                    return { red, white };
+                }
+            }
+        }
+        return { red: 0, white: 0 };
+    }
+
+    function renderData(data) {
+        // Общие данные
+        dom.arenaName.textContent = data.arena || "Хоккейное табло";
+        dom.gameDate.textContent = formatDate(data.date);
+        dom.gameId.textContent = data.gameId || "";
+
+        const finished = !!data.finished;
+        const hasStarted = Array.isArray(data.goals) && data.goals.length > 0;
+        setStatus(finished, hasStarted);
+
+        // Команды и счёт
+        const teams = data.teams || {};
+        const red = teams.RED || {};
+        const white = teams.WHITE || {};
+
+        const redName = red.name || "Красные";
+        const whiteName = white.name || "Белые";
+
+        dom.teamRedName.textContent = redName;
+        dom.teamWhiteName.textContent = whiteName;
+        dom.rosterRedTitle.textContent = redName;
+        dom.rosterWhiteTitle.textContent = whiteName;
+
+        const score = computeScore(data);
+        dom.teamRedScore.textContent = score.red;
+        dom.teamWhiteScore.textContent = score.white;
+
+        // Ростеры
+        dom.rosterRed.innerHTML = "";
+        dom.rosterWhite.innerHTML = "";
+        (red.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            dom.rosterRed.appendChild(li);
+        });
+        (white.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            dom.rosterWhite.appendChild(li);
+        });
+
+        // Протокол (объединяем голы и изменения состава по order)
+        const events = [];
+
+        if (Array.isArray(data.rosterChanges)) {
+            data.rosterChanges.forEach(rc => {
+                events.push({
+                    type: "roster",
+                    order: rc.order ?? 0,
+                    raw: rc
+                });
+            });
+        }
+
+        if (Array.isArray(data.goals)) {
+            data.goals.forEach(g => {
+                events.push({
+                    type: "goal",
+                    order: g.order ?? 0,
+                    raw: g
+                });
+            });
+        }
+
+        events.sort((a, b) => a.order - b.order);
+
+        dom.eventsList.innerHTML = "";
+        if (events.length === 0) {
+            dom.eventsList.textContent = "Событий пока нет.";
+        } else {
+            events.forEach((ev, index) => {
+                const row = document.createElement("div");
+                row.className = "event-row";
+
+                const orderCell = document.createElement("div");
+                orderCell.className = "event-order";
+                orderCell.textContent = (index + 1) + ".";
+
+                const scoreCell = document.createElement("div");
+                const descCell = document.createElement("div");
+                descCell.className = "event-desc";
+
+                if (ev.type === "goal") {
+                    const g = ev.raw;
+                    let team = (g.team === "RED") ? redName : whiteName;
+                    const tag = document.createElement("span");
+                    tag.className = "event-tag goal";
+                    tag.textContent = "Гол";
+
+                    const line = document.createElement("span");
+                    line.innerHTML =
+                        `<strong>${team}</strong>: ${g.scorer || "Неизвестный игрок"}` +
+                        (g.assist1 ? ` (передачи: ${g.assist1}${g.assist2 ? ", " + g.assist2 : ""})` : "");
+
+                    descCell.appendChild(tag);
+                    descCell.appendChild(document.createTextNode(" "));
+                    descCell.appendChild(line);
+
+                    scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
+                    scoreCell.textContent = g.scoreAfter || "";
+                } else if (ev.type === "roster") {
+                    const rc = ev.raw;
+                    const tag = document.createElement("span");
+                    tag.className = "event-tag roster";
+                    tag.textContent = "Состав";
+
+                    const toTeamName = rc.toTeam === "RED" ? redName :
+                        rc.toTeam === "WHITE" ? whiteName : (rc.toTeam || "команда");
+
+                    const line = document.createElement("span");
+                    line.innerHTML = `${rc.player || "Игрок"} перешёл в <strong>${toTeamName}</strong>`;
+
+                    descCell.appendChild(tag);
+                    descCell.appendChild(document.createTextNode(" "));
+                    descCell.appendChild(line);
+
+                    scoreCell.className = "event-score";
+                    scoreCell.textContent = "";
+                }
+
+                row.appendChild(orderCell);
+                row.appendChild(scoreCell);
+                row.appendChild(descCell);
+
+                dom.eventsList.appendChild(row);
+            });
+        }
+
+        dom.stateMessage.className = "loading";
+        dom.stateMessage.textContent = finished
+            ? "Матч завершён. Данные обновляются при изменении файла."
+            : "Данные загружены. Автообновление каждые 10 секунд.";
+    }
+
+    async function loadData() {
+        try {
+            if (!DATA_URL || DATA_URL.startsWith("https://example.com")) {
+                dom.stateMessage.className = "error";
+                dom.stateMessage.textContent = "Не настроен URL до JSON-файла (DATA_URL).";
+                return;
+            }
+
+            const response = await fetch(DATA_URL + "?t=" + Date.now(), {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+            renderData(data);
+        } catch (e) {
+            console.error(e);
+            dom.stateMessage.className = "error";
+            dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
+        }
+    }
+
+    loadData();
+    setInterval(loadData, REFRESH_INTERVAL_MS);
+</script>
 </body>
 </html>

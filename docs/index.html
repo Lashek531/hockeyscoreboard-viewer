@@ -243,15 +243,16 @@
         </div>
     </div>
 
-<div class="footer">
-    Автообновление каждые 5 секунд. Источник: ActiveGame.json с Google Drive.
-    <span id="uiVersion"></span>
-</div>
-
+    <div class="footer">
+        Автообновление каждые 5 секунд.
+        <span id="uiVersion"></span>
+    </div>
 </div>
 
 <script>
-        // 1) Локальный JSON рядом с index.html (docs/active-game.json)
+    // ========== НАСТРОЙКИ ИСТОЧНИКА ДАННЫХ ==========
+
+    // 1) Локальный JSON рядом с index.html (например, active-game.json в той же папке)
     const LOCAL_ACTIVE_GAME_URL = "./active-game.json";
 
     // 2) JSON на Google Drive через Drive API
@@ -262,26 +263,16 @@
     // 3) Переключатель: чем хотим пользоваться прямо сейчас
     const USE_DRIVE = true;  // true = грузим с Google Drive, false = из локального файла
 
+    // Итоговый URL для загрузки
     const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
 
-    // Версия интерфейса — можно обновить, чтобы понимать, что HTML подхватился
+    // Версия интерфейса — меняй при каждом изменении index.html
     const UI_VERSION = "UI v0.4";
 
-
-
-
-    
-    // СЮДА ВСТАВЬ СВОЙ URL НА ActiveGame.json:
-    // пример: "https://drive.google.com/uc?export=download&id=1AbCdEfGhIjKlMnOpQrStUvWxYz123456"
-    //const ACTIVE_GAME_URL = "https://drive.google.com/uc?export=download&id=1gXI_8--NTFxPcykag1NnlZWBD48m04wD";
-    const ACTIVE_GAME_URL = "./active-game.json";
-    //const ACTIVE_GAME_URL = "https://www.googleapis.com/drive/v3/files/1gXI_8--NTFxPcykag1NnlZWBD48m04wD?alt=media&key=ТВОЙ_API_KEY";
-   // Версия интерфейса — меняешь её при каждом изменении index.html
-    const UI_VERSION = "UI v0.1";
-
-    
-
+    // Интервал автообновления (мс)
     const REFRESH_INTERVAL_MS = 5000;
+
+    // ========== ССЫЛКИ НА DOM ==========
 
     const dom = {
         arenaName: document.getElementById("arenaName"),
@@ -301,8 +292,12 @@
         uiVersion: document.getElementById("uiVersion")
     };
 
-    dom.uiVersion.textContent = " | Интерфейс " + UI_VERSION;
+    // Подпись версии и источника
+    dom.uiVersion.textContent =
+        " | Интерфейс " + UI_VERSION +
+        " | Источник: " + (USE_DRIVE ? "Google Drive (ActiveGame.json)" : "локальный файл active-game.json");
 
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
     function formatDate(iso) {
         if (!iso) return "";
@@ -332,6 +327,7 @@
     }
 
     function computeScore(data) {
+        // 1. Если есть finalScore
         if (data.finalScore &&
             typeof data.finalScore.RED === "number" &&
             typeof data.finalScore.WHITE === "number") {
@@ -340,6 +336,7 @@
                 white: data.finalScore.WHITE
             };
         }
+        // 2. Иначе пробуем по последнему голу
         if (Array.isArray(data.goals) && data.goals.length > 0) {
             const last = data.goals[data.goals.length - 1];
             if (last.scoreAfter && typeof last.scoreAfter === "string") {
@@ -351,8 +348,11 @@
                 }
             }
         }
+        // 3. По умолчанию
         return { red: 0, white: 0 };
     }
+
+    // ========== ОТРИСОВКА ДАННЫХ ==========
 
     function renderData(data) {
         dom.arenaName.textContent = data.arena || "Хоккейное табло";
@@ -399,7 +399,7 @@
             data.rosterChanges.forEach(rc => {
                 events.push({
                     type: "roster",
-                    order: rc.order ?? 0,
+                    order: typeof rc.order === "number" ? rc.order : 0,
                     raw: rc
                 });
             });
@@ -409,7 +409,7 @@
             data.goals.forEach(g => {
                 events.push({
                     type: "goal",
-                    order: g.order ?? 0,
+                    order: typeof g.order === "number" ? g.order : 0,
                     raw: g
                 });
             });
@@ -444,9 +444,9 @@
 
                     const line = document.createElement("span");
                     line.innerHTML =
-                        `<strong>${teamName}</strong>: ${g.scorer || "Неизвестный игрок"}` +
+                        "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
                         (g.assist1
-                            ? ` (передачи: ${g.assist1}${g.assist2 ? ", " + g.assist2 : ""})`
+                            ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
                             : "");
 
                     descCell.appendChild(tag);
@@ -465,7 +465,8 @@
                         rc.toTeam === "WHITE" ? whiteName : (rc.toTeam || "команда");
 
                     const line = document.createElement("span");
-                    line.innerHTML = `${rc.player || "Игрок"} перешёл в <strong>${toTeamName}</strong>`;
+                    line.innerHTML =
+                        (rc.player || "Игрок") + " перешёл в <strong>" + toTeamName + "</strong>";
 
                     descCell.appendChild(tag);
                     descCell.appendChild(document.createTextNode(" "));
@@ -488,36 +489,39 @@
             : "Данные загружены. Автообновление каждые 5 секунд.";
     }
 
-async function loadData() {
-    try {
-        if (!ACTIVE_GAME_URL || ACTIVE_GAME_URL.includes("PASTE_ACTIVE_GAME_URL_HERE")) {
+    // ========== ЗАГРУЗКА ДАННЫХ ==========
+
+    async function loadData() {
+        try {
+            if (!ACTIVE_GAME_URL) {
+                dom.stateMessage.classList.add("error");
+                dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
+                return;
+            }
+
+            // Обход кеша за счёт параметра t=
+            const separator = ACTIVE_GAME_URL.includes("?") ? "&" : "?";
+            const url = ACTIVE_GAME_URL + separator + "t=" + Date.now();
+
+            const response = await fetch(url, {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+            renderData(data);
+        } catch (e) {
+            console.error(e);
             dom.stateMessage.classList.add("error");
-            dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
-            return;
+            dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
+            // Важно: не трогаем уже отрисованные данные, чтобы табло не пропадало
         }
-
-        // Аккуратно добавляем параметр t= для обхода кеша
-        const separator = ACTIVE_GAME_URL.includes("?") ? "&" : "?";
-        const url = ACTIVE_GAME_URL + separator + "t=" + Date.now();
-
-        const response = await fetch(url, {
-            cache: "no-store"
-        });
-
-        if (!response.ok) {
-            throw new Error("HTTP " + response.status);
-        }
-
-        const data = await response.json();
-        renderData(data);
-    } catch (e) {
-        console.error(e);
-        dom.stateMessage.classList.add("error");
-        dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
     }
-}
 
-
+    // Первый запуск + периодическое обновление
     loadData();
     setInterval(loadData, REFRESH_INTERVAL_MS);
 </script>

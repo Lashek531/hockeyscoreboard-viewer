@@ -9,7 +9,9 @@
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             color-scheme: dark;
         }
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
         body {
             margin: 0;
             padding: 16px;
@@ -17,7 +19,7 @@
             color: #f5f5f5;
         }
         .page {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
@@ -26,8 +28,9 @@
         .top-bar {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            gap: 12px;
             flex-wrap: wrap;
-            gap: 8px;
         }
         .arena {
             font-size: 18px;
@@ -60,7 +63,6 @@
             background: rgba(255, 193, 7, 0.15);
             border-color: rgba(255, 193, 7, 0.7);
         }
-
         .scoreboard {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -71,7 +73,9 @@
             background: radial-gradient(circle at top, #273569 0, #050814 55%);
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
         }
-        .team { text-align: center; }
+        .team {
+            text-align: center;
+        }
         .team-name {
             font-size: 18px;
             text-transform: uppercase;
@@ -90,6 +94,7 @@
             font-size: 24px;
             opacity: 0.8;
         }
+
         .state {
             font-size: 14px;
             opacity: 0.85;
@@ -97,54 +102,93 @@
         .state.error { color: #ff8a80; }
         .state.loading { color: #90caf9; }
 
-        .block-title {
+        .events-block {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 16px;
+            align-items: flex-start;
+        }
+        @media (max-width: 900px) {
+            .events-block {
+                grid-template-columns: 1fr;
+            }
+        }
+        .events-card, .roster-card {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+        }
+        .card-title {
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.16em;
             opacity: 0.75;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
-        .games-card {
-            background: rgba(15, 23, 42, 0.9);
-            border-radius: 16px;
-            padding: 12px 16px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+        .events-list {
+            max-height: 360px;
+            overflow-y: auto;
+            font-size: 14px;
         }
-        .games-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
+        .event-row {
+            display: grid;
+            grid-template-columns: 40px 70px minmax(0, 1fr);
+            gap: 6px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
         }
-        .games-table thead {
+        .event-row:last-child {
+            border-bottom: none;
+        }
+        .event-order {
+            opacity: 0.6;
+        }
+        .event-score {
+            font-weight: 600;
+        }
+        .event-score.red { color: #ff8a80; }
+        .event-score.white { color: #cfd8dc; }
+        .event-desc strong {
+            font-weight: 600;
+        }
+        .event-tag {
+            display: inline-block;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
-            opacity: 0.7;
-        }
-        .games-table th,
-        .games-table td {
-            padding: 6px 4px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-        }
-        .games-table tr:last-child td {
-            border-bottom: none;
-        }
-        .games-table th:first-child,
-        .games-table td:first-child {
-            padding-left: 0;
-        }
-        .games-table th:last-child,
-        .games-table td:last-child {
-            padding-right: 0;
-        }
-        .col-date { white-space: nowrap; }
-        .col-arena { min-width: 120px; }
-        .col-score { text-align: center; font-weight: 600; }
-        .col-team { min-width: 120px; }
-        .games-state {
-            font-size: 12px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.5);
+            margin-right: 4px;
             opacity: 0.8;
-            margin-top: 4px;
+        }
+        .event-tag.goal { border-color: #ff8a80; color: #ff8a80; }
+        .event-tag.roster { border-color: #90caf9; color: #90caf9; }
+
+        .roster-list {
+            font-size: 13px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 8px 24px;
+        }
+        .team-roster-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .team-roster-title.red { color: #ff8a80; }
+        .team-roster-title.white { color: #eceff1; }
+        .players {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .players li {
+            padding: 1px 0;
+            opacity: 0.9;
         }
         .footer {
             font-size: 11px;
@@ -155,11 +199,10 @@
 </head>
 <body>
 <div class="page">
-    <!-- Блок текущего табло (пока можно не настраивать ACTIVE_GAME_URL) -->
     <div class="top-bar">
         <div>
             <div class="arena" id="arenaName">Хоккейное табло</div>
-            <div class="state loading" id="stateMessage">Табло ещё не настроено.</div>
+            <div class="state loading" id="stateMessage">Загрузка данных...</div>
         </div>
         <div class="meta">
             <div id="gameId"></div>
@@ -180,55 +223,53 @@
         </div>
     </div>
 
-    <!-- Блок списка игр по GamesIndex.json -->
-    <div class="games-card">
-        <div class="block-title">Список игр (по данным GamesIndex.json)</div>
-        <div class="games-state state loading" id="gamesState">Загрузка списка игр...</div>
-        <div style="overflow-x:auto;">
-            <table class="games-table" id="gamesTable" style="display:none;">
-                <thead>
-                <tr>
-                    <th class="col-date">Дата</th>
-                    <th class="col-arena">Арена</th>
-                    <th class="col-team">Команды</th>
-                    <th class="col-score">Счёт</th>
-                </tr>
-                </thead>
-                <tbody id="gamesTableBody"></tbody>
-            </table>
+    <div class="events-block">
+        <div class="events-card">
+            <div class="card-title">Протокол матча</div>
+            <div class="events-list" id="eventsList"></div>
+        </div>
+        <div class="roster-card">
+            <div class="card-title">Составы команд</div>
+            <div class="roster-list">
+                <div>
+                    <div class="team-roster-title red" id="rosterRedTitle">Красные</div>
+                    <ul class="players" id="rosterRed"></ul>
+                </div>
+                <div>
+                    <div class="team-roster-title white" id="rosterWhiteTitle">Белые</div>
+                    <ul class="players" id="rosterWhite"></ul>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="footer">
-        Табло и список игр обновляются с Google Drive. Список игр — каждые 5 секунд.
+        Автообновление каждые 5 секунд. Источник: ActiveGame.json с Google Drive.
     </div>
 </div>
 
 <script>
-    // 1. URL активной игры (можно пока не трогать, если нет файла active-game.json)
-    // пример: "https://drive.google.com/uc?export=download&id=ACTIVE_FILE_ID"
-    const ACTIVE_GAME_URL = ""; // оставляем пустым, чтобы не ругалось
+    // СЮДА ВСТАВЬ СВОЙ URL НА ActiveGame.json:
+    // пример: "https://drive.google.com/uc?export=download&id=1AbCdEfGhIjKlMnOpQrStUvWxYz123456"
+    const ACTIVE_GAME_URL = "https://drive.google.com/uc?export=download&id=1gXI_8--NTFxPcykag1NnlZWBD48m04wD";
 
-    // 2. URL GamesIndex.json (НУЖНО ЗАПОЛНИТЬ)
-    // пример: "https://drive.google.com/uc?export=download&id=INDEX_FILE_ID"
-    const GAMES_INDEX_URL = "https://drive.google.com/uc?export=download&id=1Vqpfb6hTIgE13X3a4Fbp7QyEe-C1G-Pb";
-
-    const REFRESH_INDEX_MS = 5000;
+    const REFRESH_INTERVAL_MS = 5000;
 
     const dom = {
         arenaName: document.getElementById("arenaName"),
-        gameId: document.getElementById("gameId"),
         gameDate: document.getElementById("gameDate"),
+        gameId: document.getElementById("gameId"),
         gameStatus: document.getElementById("gameStatus"),
         teamRedName: document.getElementById("teamRedName"),
         teamWhiteName: document.getElementById("teamWhiteName"),
         teamRedScore: document.getElementById("teamRedScore"),
         teamWhiteScore: document.getElementById("teamWhiteScore"),
-        stateMessage: document.getElementById("stateMessage"),
-
-        gamesState: document.getElementById("gamesState"),
-        gamesTable: document.getElementById("gamesTable"),
-        gamesTableBody: document.getElementById("gamesTableBody")
+        rosterRedTitle: document.getElementById("rosterRedTitle"),
+        rosterWhiteTitle: document.getElementById("rosterWhiteTitle"),
+        rosterRed: document.getElementById("rosterRed"),
+        rosterWhite: document.getElementById("rosterWhite"),
+        eventsList: document.getElementById("eventsList"),
+        stateMessage: document.getElementById("stateMessage")
     };
 
     function formatDate(iso) {
@@ -244,94 +285,196 @@
         });
     }
 
-    function computeScoreFromFinal(finalScore) {
-        if (!finalScore) return "—";
-        const r = typeof finalScore.RED === "number" ? finalScore.RED : 0;
-        const w = typeof finalScore.WHITE === "number" ? finalScore.WHITE : 0;
-        return r + " : " + w;
+    function setStatus(finished, hasStarted) {
+        dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
+        if (finished) {
+            dom.gameStatus.classList.add("status-finished");
+            dom.gameStatus.textContent = "Матч завершён";
+        } else if (hasStarted) {
+            dom.gameStatus.classList.add("status-live");
+            dom.gameStatus.textContent = "Идёт матч";
+        } else {
+            dom.gameStatus.classList.add("status-scheduled");
+            dom.gameStatus.textContent = "Матч запланирован";
+        }
     }
 
-    // Заглушка для табло (пока ACTIVE_GAME_URL пустой)
-    function initScoreboardStub() {
-        dom.stateMessage.textContent = "Табло ещё не настроено. Будет использовать отдельный JSON активной игры.";
+    function computeScore(data) {
+        if (data.finalScore &&
+            typeof data.finalScore.RED === "number" &&
+            typeof data.finalScore.WHITE === "number") {
+            return {
+                red: data.finalScore.RED,
+                white: data.finalScore.WHITE
+            };
+        }
+        if (Array.isArray(data.goals) && data.goals.length > 0) {
+            const last = data.goals[data.goals.length - 1];
+            if (last.scoreAfter && typeof last.scoreAfter === "string") {
+                const parts = last.scoreAfter.split(":");
+                const red = parseInt(parts[0], 10);
+                const white = parseInt(parts[1], 10);
+                if (!isNaN(red) && !isNaN(white)) {
+                    return { red, white };
+                }
+            }
+        }
+        return { red: 0, white: 0 };
+    }
+
+    function renderData(data) {
+        dom.arenaName.textContent = data.arena || "Хоккейное табло";
+        dom.gameDate.textContent = formatDate(data.date);
+        dom.gameId.textContent = data.gameId || "";
+
+        const finished = !!data.finished;
+        const hasStarted = Array.isArray(data.goals) && data.goals.length > 0;
+        setStatus(finished, hasStarted);
+
+        const teams = data.teams || {};
+        const red = teams.RED || {};
+        const white = teams.WHITE || {};
+
+        const redName = red.name || "Красные";
+        const whiteName = white.name || "Белые";
+
+        dom.teamRedName.textContent = redName;
+        dom.teamWhiteName.textContent = whiteName;
+        dom.rosterRedTitle.textContent = redName;
+        dom.rosterWhiteTitle.textContent = whiteName;
+
+        const score = computeScore(data);
+        dom.teamRedScore.textContent = score.red;
+        dom.teamWhiteScore.textContent = score.white;
+
+        dom.rosterRed.innerHTML = "";
+        dom.rosterWhite.innerHTML = "";
+        (red.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            dom.rosterRed.appendChild(li);
+        });
+        (white.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            dom.rosterWhite.appendChild(li);
+        });
+
+        // Протокол: объединяем rosterChanges и goals по order
+        const events = [];
+
+        if (Array.isArray(data.rosterChanges)) {
+            data.rosterChanges.forEach(rc => {
+                events.push({
+                    type: "roster",
+                    order: rc.order ?? 0,
+                    raw: rc
+                });
+            });
+        }
+
+        if (Array.isArray(data.goals)) {
+            data.goals.forEach(g => {
+                events.push({
+                    type: "goal",
+                    order: g.order ?? 0,
+                    raw: g
+                });
+            });
+        }
+
+        events.sort((a, b) => a.order - b.order);
+
+        dom.eventsList.innerHTML = "";
+        if (events.length === 0) {
+            dom.eventsList.textContent = "Событий пока нет.";
+        } else {
+            events.forEach((ev, index) => {
+                const row = document.createElement("div");
+                row.className = "event-row";
+
+                const orderCell = document.createElement("div");
+                orderCell.className = "event-order";
+                orderCell.textContent = (index + 1) + ".";
+
+                const scoreCell = document.createElement("div");
+                const descCell = document.createElement("div");
+                descCell.className = "event-desc";
+
+                if (ev.type === "goal") {
+                    const g = ev.raw;
+                    const teamName = g.team === "RED" ? redName :
+                                     g.team === "WHITE" ? whiteName : (g.team || "Команда");
+
+                    const tag = document.createElement("span");
+                    tag.className = "event-tag goal";
+                    tag.textContent = "Гол";
+
+                    const line = document.createElement("span");
+                    line.innerHTML =
+                        `<strong>${teamName}</strong>: ${g.scorer || "Неизвестный игрок"}` +
+                        (g.assist1
+                            ? ` (передачи: ${g.assist1}${g.assist2 ? ", " + g.assist2 : ""})`
+                            : "");
+
+                    descCell.appendChild(tag);
+                    descCell.appendChild(document.createTextNode(" "));
+                    descCell.appendChild(line);
+
+                    scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
+                    scoreCell.textContent = g.scoreAfter || "";
+                } else if (ev.type === "roster") {
+                    const rc = ev.raw;
+                    const tag = document.createElement("span");
+                    tag.className = "event-tag roster";
+                    tag.textContent = "Состав";
+
+                    const toTeamName = rc.toTeam === "RED" ? redName :
+                        rc.toTeam === "WHITE" ? whiteName : (rc.toTeam || "команда");
+
+                    const line = document.createElement("span");
+                    line.innerHTML = `${rc.player || "Игрок"} перешёл в <strong>${toTeamName}</strong>`;
+
+                    descCell.appendChild(tag);
+                    descCell.appendChild(document.createTextNode(" "));
+                    descCell.appendChild(line);
+
+                    scoreCell.className = "event-score";
+                    scoreCell.textContent = "";
+                }
+
+                row.appendChild(orderCell);
+                row.appendChild(scoreCell);
+                row.appendChild(descCell);
+                dom.eventsList.appendChild(row);
+            });
+        }
+
         dom.stateMessage.classList.remove("error", "loading");
-        dom.stateMessage.classList.add("state");
+        dom.stateMessage.textContent = finished
+            ? "Матч завершён. Данные обновляются при изменении файла."
+            : "Данные загружены. Автообновление каждые 5 секунд.";
     }
 
-    // Загрузка GamesIndex.json и отрисовка списка игр
-    async function loadGamesIndex() {
+    async function loadData() {
         try {
-            if (!GAMES_INDEX_URL || GAMES_INDEX_URL.startsWith("ЗДЕСЬ_")) {
-                dom.gamesState.classList.add("error");
-                dom.gamesState.textContent = "URL GamesIndex.json не настроен.";
+            if (!ACTIVE_GAME_URL || ACTIVE_GAME_URL.includes("PASTE_ACTIVE_GAME_URL_HERE")) {
+                dom.stateMessage.classList.add("error");
+                dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
                 return;
             }
 
-            const response = await fetch(GAMES_INDEX_URL + "&t=" + Date.now(), { cache: "no-store" });
+            const response = await fetch(ACTIVE_GAME_URL + "&t=" + Date.now(), {
+                cache: "no-store"
+            });
+
             if (!response.ok) {
                 throw new Error("HTTP " + response.status);
             }
 
             const data = await response.json();
-            const games = Array.isArray(data.games) ? data.games.slice() : [];
-
-            // сортируем по дате (новые сверху)
-            games.sort((a, b) => {
-                const da = new Date(a.date || 0).getTime();
-                const db = new Date(b.date || 0).getTime();
-                return db - da;
-            });
-
-            dom.gamesTableBody.innerHTML = "";
-
-            games.forEach(game => {
-                const tr = document.createElement("tr");
-
-                const tdDate = document.createElement("td");
-                tdDate.className = "col-date";
-                tdDate.textContent = formatDate(game.date);
-
-                const tdArena = document.createElement("td");
-                tdArena.className = "col-arena";
-                tdArena.textContent = game.arena || "";
-
-                const tdTeams = document.createElement("td");
-                tdTeams.className = "col-team";
-                // пока просто строкой, позже можем красиво "Красные — Белые"
-                tdTeams.textContent = game.gameId || "";
-
-                const tdScore = document.createElement("td");
-                tdScore.className = "col-score";
-                tdScore.textContent = computeScoreFromFinal(game.finalScore);
-
-                tr.appendChild(tdDate);
-                tr.appendChild(tdArena);
-                tr.appendChild(tdTeams);
-                tr.appendChild(tdScore);
-
-                dom.gamesTableBody.appendChild(tr);
-            });
-
-            if (games.length === 0) {
-                dom.gamesState.classList.remove("error");
-                dom.gamesState.textContent = "В индексе пока нет ни одной игры.";
-                dom.gamesTable.style.display = "none";
-            } else {
-                dom.gamesState.classList.remove("error");
-                dom.gamesState.textContent = "Список игр обновлён.";
-                dom.gamesTable.style.display = "";
-            }
+            renderData(data);
         } catch (e) {
             console.error(e);
-            dom.gamesState.classList.add("error");
-            dom.gamesState.textContent = "Ошибка загрузки GamesIndex.json: " + e.message;
-        }
-    }
-
-    // Инициализация
-    initScoreboardStub();
-    loadGamesIndex();
-    setInterval(loadGamesIndex, REFRESH_INDEX_MS);
-</script>
-</body>
-</html>
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage

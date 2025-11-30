@@ -1,4 +1,5 @@
 // js/app.js
+
 // Ожидается, что перед этим подключён js/config.js,
 // который определяет ACTIVE_GAME_URL, UI_VERSION и REFRESH_INTERVAL_MS.
 
@@ -82,7 +83,6 @@ function renderData(data) {
     dom.arenaName.textContent = data.arena || "Хоккейное табло";
     dom.gameDate.textContent = formatDate(data.date);
 
-    // gameId не выводим — он скрыт стилями
     dom.gameId.textContent = "";
 
     const finished = !!data.finished;
@@ -172,7 +172,7 @@ function renderData(data) {
                 line.innerHTML =
                     "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
                     (g.assist1
-                        ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
+                        ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assист2 : "") + ")"
                         : "");
 
                 descCell.appendChild(tag);
@@ -209,7 +209,6 @@ function renderData(data) {
         });
     }
 
-    // после успешной загрузки стираем статус под ареной
     dom.stateMessage.classList.remove("error", "loading");
     dom.stateMessage.textContent = "";
 }
@@ -273,16 +272,4 @@ if (dom.fsToggle) {
     dom.fsToggle.addEventListener("click", toggleFullscreen);
 }
 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        // браузер и так выйдет из фуллскрина, но на всякий случай
-        exitFullscreen();
-    }
-});
-
-// Попытка войти в полноэкранный режим при первом взаимодействии с документом
-document.addEventListener("click", function autoFsOnce() {
-    document.removeEventListener("click", autoFsOnce);
-    enterFullscreen();
-});
-
+// ВАЖНО: авто-fullscreen полностью отключён

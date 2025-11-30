@@ -459,30 +459,35 @@
             : "Данные загружены. Автообновление каждые 5 секунд.";
     }
 
-    async function loadData() {
-        try {
-            if (!ACTIVE_GAME_URL || ACTIVE_GAME_URL.includes("PASTE_ACTIVE_GAME_URL_HERE")) {
-                dom.stateMessage.classList.add("error");
-                dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
-                return;
-            }
-
-            const response = await fetch(ACTIVE_GAME_URL + "&t=" + Date.now(), {
-                cache: "no-store"
-            });
-
-            if (!response.ok) {
-                throw new Error("HTTP " + response.status);
-            }
-
-            const data = await response.json();
-            renderData(data);
-        } catch (e) {
-            console.error(e);
+async function loadData() {
+    try {
+        if (!ACTIVE_GAME_URL || ACTIVE_GAME_URL.includes("PASTE_ACTIVE_GAME_URL_HERE")) {
             dom.stateMessage.classList.add("error");
-            dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
+            dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
+            return;
         }
+
+        // Аккуратно добавляем параметр t= для обхода кеша
+        const separator = ACTIVE_GAME_URL.includes("?") ? "&" : "?";
+        const url = ACTIVE_GAME_URL + separator + "t=" + Date.now();
+
+        const response = await fetch(url, {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        renderData(data);
+    } catch (e) {
+        console.error(e);
+        dom.stateMessage.classList.add("error");
+        dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
     }
+}
+
 
     loadData();
     setInterval(loadData, REFRESH_INTERVAL_MS);

@@ -25,6 +25,8 @@
             flex-direction: column;
             gap: 16px;
         }
+
+        /* Верхняя панель + меню */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -40,6 +42,9 @@
             font-size: 14px;
             opacity: 0.8;
             text-align: right;
+        }
+        #gameId {
+            display: none; /* убираем название файла */
         }
         .status {
             display: inline-block;
@@ -63,6 +68,55 @@
             background: rgba(255, 193, 7, 0.15);
             border-color: rgba(255, 193, 7, 0.7);
         }
+
+        .menu-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .menu-item {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            background: rgba(15,23,42,0.9);
+            color: #e2e8f0;
+            font-size: 13px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        .menu-item:hover {
+            background: rgba(30, 64, 175, 0.9);
+            border-color: rgba(191, 219, 254, 0.9);
+        }
+        .menu-spacer {
+            flex: 1 1 auto;
+        }
+        .fs-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            background: rgba(15,23,42,0.9);
+            color: #e2e8f0;
+            font-size: 13px;
+            padding: 6px 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .fs-btn:hover {
+            background: rgba(15,118,110,0.9);
+            border-color: rgba(167,243,208,0.9);
+        }
+
+        .state {
+            font-size: 14px;
+            opacity: 0.85;
+            min-height: 1.2em; /* чтобы место не прыгало */
+        }
+        .state.error { color: #ff8a80; }
+        .state.loading { color: #90caf9; }
+
         .scoreboard {
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -94,13 +148,6 @@
             font-size: 24px;
             opacity: 0.8;
         }
-
-        .state {
-            font-size: 14px;
-            opacity: 0.85;
-        }
-        .state.error { color: #ff8a80; }
-        .state.loading { color: #90caf9; }
 
         .events-block {
             display: grid;
@@ -149,6 +196,7 @@
         }
         .event-score.red { color: #ff8a80; }
         .event-score.white { color: #cfd8dc; }
+
         .event-desc strong {
             font-weight: 600;
         }
@@ -163,8 +211,18 @@
             margin-right: 4px;
             opacity: 0.8;
         }
-        .event-tag.goal { border-color: #ff8a80; color: #ff8a80; }
-        .event-tag.roster { border-color: #90caf9; color: #90caf9; }
+        .event-tag.goal-red {
+            border-color: #ff8a80;
+            color: #ff8a80;
+        }
+        .event-tag.goal-white {
+            border-color: #eceff1;
+            color: #eceff1;
+        }
+        .event-tag.roster {
+            border-color: #90caf9;
+            color: #90caf9;
+        }
 
         .roster-list {
             font-size: 13px;
@@ -211,6 +269,16 @@
         </div>
     </div>
 
+    <nav class="menu-bar">
+        <button class="menu-item" type="button">Завершённые игры</button>
+        <button class="menu-item" type="button">Лучшие бомбардиры</button>
+        <button class="menu-item" type="button">Лучшие снайперы</button>
+        <span class="menu-spacer"></span>
+        <button class="fs-btn" type="button" id="fsToggle">
+            ⛶ Полный экран
+        </button>
+    </nav>
+
     <div class="scoreboard">
         <div class="team">
             <div class="team-name red" id="teamRedName">Красные</div>
@@ -250,28 +318,19 @@
 </div>
 
 <script>
-    // ========== НАСТРОЙКИ ИСТОЧНИКА ДАННЫХ ==========
-// 1) Локальный JSON рядом с index.html (на всякий случай оставляем)
-const LOCAL_ACTIVE_GAME_URL = "./active-game.json";
+    // ========== ИСТОЧНИК ДАННЫХ ==========
+    const LOCAL_ACTIVE_GAME_URL = "./active-game.json";
+    const DRIVE_ACTIVE_GAME_URL =
+        "https://hockey.ch73210.keenetic.pro:8443/active_game.json";
 
-// 2) JSON на Google Drive через публичную ссылку (БЕЗ API KEY)
-const DRIVE_ACTIVE_GAME_URL =
-    "https://hockey.ch73210.keenetic.pro:8443/active_game.json";
+    const USE_DRIVE = true;
+    const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
 
-// сейчас хотим читать именно с Drive
-const USE_DRIVE = true;
+    const UI_VERSION = "UI v0.9 (raspi-json)";
 
-const ACTIVE_GAME_URL = USE_DRIVE ? DRIVE_ACTIVE_GAME_URL : LOCAL_ACTIVE_GAME_URL;
-
-// просто обнови версию, чтобы было видно, что HTML обновился
-const UI_VERSION = "UI v0.8 (drive-uc)";
-
-
-    // Интервал автообновления (мс)
     const REFRESH_INTERVAL_MS = 5000;
 
-    // ========== ССЫЛКИ НА DOM ==========
-
+    // ========== DOM ==========
     const dom = {
         arenaName: document.getElementById("arenaName"),
         gameDate: document.getElementById("gameDate"),
@@ -287,16 +346,15 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
         rosterWhite: document.getElementById("rosterWhite"),
         eventsList: document.getElementById("eventsList"),
         stateMessage: document.getElementById("stateMessage"),
-        uiVersion: document.getElementById("uiVersion")
+        uiVersion: document.getElementById("uiVersion"),
+        fsToggle: document.getElementById("fsToggle")
     };
 
-    // Подпись версии и источника
     dom.uiVersion.textContent =
         " | Интерфейс " + UI_VERSION +
-        " | Источник: " + (USE_DRIVE ? "Google Drive (ActiveGame.json)" : "локальный файл active-game.json");
+        " | Источник: " + (USE_DRIVE ? "Raspberry Pi (active_game.json)" : "локальный файл");
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
     function formatDate(iso) {
         if (!iso) return "";
         const d = new Date(iso);
@@ -325,7 +383,6 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
     }
 
     function computeScore(data) {
-        // 1. Если есть finalScore
         if (data.finalScore &&
             typeof data.finalScore.RED === "number" &&
             typeof data.finalScore.WHITE === "number") {
@@ -334,7 +391,6 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
                 white: data.finalScore.WHITE
             };
         }
-        // 2. Иначе пробуем по последнему голу
         if (Array.isArray(data.goals) && data.goals.length > 0) {
             const last = data.goals[data.goals.length - 1];
             if (last.scoreAfter && typeof last.scoreAfter === "string") {
@@ -346,16 +402,16 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
                 }
             }
         }
-        // 3. По умолчанию
         return { red: 0, white: 0 };
     }
 
-    // ========== ОТРИСОВКА ДАННЫХ ==========
-
+    // ========== РЕНДЕР ==========
     function renderData(data) {
         dom.arenaName.textContent = data.arena || "Хоккейное табло";
         dom.gameDate.textContent = formatDate(data.date);
-        dom.gameId.textContent = data.gameId || "";
+
+        // gameId не выводим — он скрыт стилями
+        dom.gameId.textContent = "";
 
         const finished = !!data.finished;
         const hasStarted = Array.isArray(data.goals) && data.goals.length > 0;
@@ -390,7 +446,6 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
             dom.rosterWhite.appendChild(li);
         });
 
-        // Протокол: объединяем rosterChanges и goals по order
         const events = [];
 
         if (Array.isArray(data.rosterChanges)) {
@@ -437,7 +492,8 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
                                      g.team === "WHITE" ? whiteName : (g.team || "Команда");
 
                     const tag = document.createElement("span");
-                    tag.className = "event-tag goal";
+                    tag.className = "event-tag " +
+                        (g.team === "RED" ? "goal-red" : "goal-white");
                     tag.textContent = "Гол";
 
                     const line = document.createElement("span");
@@ -481,30 +537,24 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
             });
         }
 
+        // после успешной загрузки стираем статус под ареной
         dom.stateMessage.classList.remove("error", "loading");
-        dom.stateMessage.textContent = finished
-            ? "Матч завершён. Данные обновляются при изменении файла."
-            : "Данные загружены. Автообновление каждые 5 секунд.";
+        dom.stateMessage.textContent = "";
     }
 
-    // ========== ЗАГРУЗКА ДАННЫХ ==========
-
+    // ========== ЗАГРУЗКА ==========
     async function loadData() {
         try {
             if (!ACTIVE_GAME_URL) {
                 dom.stateMessage.classList.add("error");
-                dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json (ACTIVE_GAME_URL).";
+                dom.stateMessage.textContent = "Не настроен URL до ActiveGame.json.";
                 return;
             }
 
-            // Обход кеша за счёт параметра t=
             const separator = ACTIVE_GAME_URL.includes("?") ? "&" : "?";
             const url = ACTIVE_GAME_URL + separator + "t=" + Date.now();
 
-            const response = await fetch(url, {
-                cache: "no-store"
-            });
-
+            const response = await fetch(url, { cache: "no-store" });
             if (!response.ok) {
                 throw new Error("HTTP " + response.status);
             }
@@ -515,13 +565,54 @@ const UI_VERSION = "UI v0.8 (drive-uc)";
             console.error(e);
             dom.stateMessage.classList.add("error");
             dom.stateMessage.textContent = "Ошибка загрузки данных: " + e.message;
-            // Важно: не трогаем уже отрисованные данные, чтобы табло не пропадало
         }
     }
 
-    // Первый запуск + периодическое обновление
     loadData();
     setInterval(loadData, REFRESH_INTERVAL_MS);
+
+    // ========== ПОЛНОЭКРАННЫЙ РЕЖИМ ==========
+    function isFullscreen() {
+        return !!document.fullscreenElement;
+    }
+
+    async function enterFullscreen() {
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+            try { await el.requestFullscreen(); } catch (_) {}
+        }
+    }
+
+    async function exitFullscreen() {
+        if (document.exitFullscreen && isFullscreen()) {
+            try { await document.exitFullscreen(); } catch (_) {}
+        }
+    }
+
+    async function toggleFullscreen() {
+        if (isFullscreen()) {
+            await exitFullscreen();
+        } else {
+            await enterFullscreen();
+        }
+    }
+
+    if (dom.fsToggle) {
+        dom.fsToggle.addEventListener("click", toggleFullscreen);
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            // браузер и так выйдет из фуллскрина, но на всякий случай
+            exitFullscreen();
+        }
+    });
+
+    // Попытка войти в полноэкранный режим при первом взаимодействии с документом
+    document.addEventListener("click", function autoFsOnce() {
+        document.removeEventListener("click", autoFsOnce);
+        enterFullscreen();
+    });
 </script>
 </body>
 </html>

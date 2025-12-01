@@ -255,3 +255,43 @@ body {
     opacity: 0.6;
     text-align: right;
 }
+/* Таблицы лидеров и завершённых игр */
+
+.events-list.leaders-table .event-row,
+.events-list.finished-list .event-row {
+    display: grid;
+    column-gap: 8px;
+    padding: 4px 0;
+    align-items: center;
+}
+
+/* Бомбардиры / Снайперы / Победы:
+   для универсальности делаем 6 колонок, лишние просто пустые */
+.events-list.leaders-table .table-header,
+.events-list.leaders-table .table-row {
+    grid-template-columns: 40px 2fr 1fr 1fr 1fr 1fr;
+}
+
+.events-list.leaders-table .table-header {
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 4px;
+}
+
+.events-list.leaders-table .table-cell {
+    font-size: 0.9rem;
+}
+
+/* Завершённые игры: номер, описание, счёт */
+.events-list.finished-list .event-row {
+    grid-template-columns: 40px 1fr 80px;
+}
+
+.events-list.finished-list .num-col {
+    font-weight: bold;
+}
+
+.events-list.finished-list .score-col {
+    text-align: right;
+    font-weight: bold;
+}

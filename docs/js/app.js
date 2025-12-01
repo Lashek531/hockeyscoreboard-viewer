@@ -72,6 +72,7 @@ function buildUrl(pathOrUrl) {
     const separator = url.includes("?") ? "&" : "?";
     return url + separator + "t=" + Date.now();
 }
+let firstActiveLoad = true;
 
 async function fetchJson(pathOrUrl) {
     const url = buildUrl(pathOrUrl);
@@ -706,9 +707,11 @@ async function showLeaders(mode) {
 
 async function loadAndRenderActiveGame() {
     try {
-        dom.stateMessage.classList.remove("error");
-        dom.stateMessage.classList.add("loading");
-        dom.stateMessage.textContent = "Загрузка активной игры...";
+        if (firstActiveLoad && dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = "Загрузка активной игры...";
+        }
 
         const indexData = await ensureGlobalIndex();
         const season = getCurrentSeasonEntry(indexData);
@@ -721,16 +724,23 @@ async function loadAndRenderActiveGame() {
         const names = renderScoreboardBase(gameData);
         renderProtocol(gameData, names.redName, names.whiteName);
 
-        dom.stateMessage.classList.remove("error", "loading");
-        dom.stateMessage.textContent = "";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error", "loading");
+            dom.stateMessage.textContent = "";
+        }
+
+        firstActiveLoad = false;
     } catch (e) {
         console.error(e);
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.classList.add("error");
-        dom.stateMessage.textContent =
-            "Ошибка загрузки активной игры: " + e.message;
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки активной игры: " + e.message;
+        }
     }
 }
+
 
 // ========== ОБРАБОТЧИКИ МЕНЮ ==========
 

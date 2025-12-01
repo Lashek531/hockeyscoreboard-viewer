@@ -28,8 +28,15 @@ const dom = {
     menuFinished: document.getElementById("menuFinished"),
     menuBombardiers: document.getElementById("menuBombardiers"),
     menuSnipers: document.getElementById("menuSnipers"),
-    menuWins: document.getElementById("menuWins")
+    menuWins: document.getElementById("menuWins"),
+
+    // модалка
+    modalBackdrop: document.getElementById("modalBackdrop"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalContent: document.getElementById("modalContent"),
+    modalOkButton: document.getElementById("modalOkButton")
 };
+
 
 dom.uiVersion.textContent =
     " | Интерфейс " + UI_VERSION +
@@ -141,6 +148,39 @@ function setStatus(finished, hasStarted) {
     }
 }
 
+// ===== МОДАЛЬНЫЕ ОКНА =====
+
+function openModal(title) {
+    if (!dom.modalBackdrop) return;
+    if (dom.modalTitle) {
+        dom.modalTitle.textContent = title || "";
+    }
+    dom.modalBackdrop.classList.add("visible");
+}
+
+function closeModal() {
+    if (!dom.modalBackdrop) return;
+    dom.modalBackdrop.classList.remove("visible");
+    if (dom.modalContent) {
+        dom.modalContent.innerHTML = "";
+    }
+}
+
+// Кнопка ОК закрывает модалку
+if (dom.modalOkButton) {
+    dom.modalOkButton.addEventListener("click", closeModal);
+}
+
+// Клик по фону вокруг окна — тоже закрытие (не обязательно, но удобно)
+if (dom.modalBackdrop) {
+    dom.modalBackdrop.addEventListener("click", (e) => {
+        if (e.target === dom.modalBackdrop) {
+            closeModal();
+        }
+    });
+}
+
+
 function computeScore(data) {
     if (data.finalScore &&
         typeof data.finalScore.RED === "number" &&
@@ -244,10 +284,8 @@ function renderScoreboardBase(data) {
 }
 
 // Протокол матча (режим PANEL_MODE.PROTOCOL)
-function renderProtocol(data, redName, whiteName) {
-    resetEventsListClasses();
-    setEventsTitle("Протокол матча");
-
+// Строим DOM-протокол в указанный контейнер
+function buildProtocolEvents(data, redName, whiteName, target) {
     const events = [];
 
     if (Array.isArray(data.rosterChanges)) {
@@ -272,9 +310,9 @@ function renderProtocol(data, redName, whiteName) {
 
     events.sort((a, b) => a.order - b.order);
 
-    dom.eventsList.innerHTML = "";
+    target.innerHTML = "";
     if (events.length === 0) {
-        dom.eventsList.textContent = "Событий пока нет.";
+        target.textContent = "Событий пока нет.";
         return;
     }
 
@@ -304,7 +342,7 @@ function renderProtocol(data, redName, whiteName) {
             line.innerHTML =
                 "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
                 (g.assist1
-                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
+                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assист2 : "") + ")"
                     : "");
 
             descCell.appendChild(tag);
@@ -337,15 +375,23 @@ function renderProtocol(data, redName, whiteName) {
         row.appendChild(orderCell);
         row.appendChild(scoreCell);
         row.appendChild(descCell);
-        dom.eventsList.appendChild(row);
+        target.appendChild(row);
     });
 }
 
+// Протокол текущего матча — в правой части экрана (как было)
+function renderProtocol(data, redName, whiteName) {
+    resetEventsListClasses && resetEventsListClasses();
+    setEventsTitle && setEventsTitle("Протокол матча");
+    buildProtocolEvents(data, redName, whiteName, dom.eventsList);
+}
+
+
 // Список завершённых игр
-function renderFinishedList(indexData) {
-    resetEventsListClasses();
-    setEventsTitle("Завершённые игры");
-    dom.eventsList.classList.add("finished-list");
+function renderFinishedList(indexData, container, onGameClick) {
+    const target = container || dom.eventsList;
+    target.classList.add("finished-list");
+    target.innerHTML = "";
 
     const games = Array.isArray(indexData.games) ? indexData.games.slice() : [];
 
@@ -355,16 +401,19 @@ function renderFinishedList(indexData) {
         return db - da;
     });
 
-    dom.eventsList.innerHTML = "";
-
     if (games.length === 0) {
-        dom.eventsList.textContent = "Завершённых игр пока нет.";
+        target.textContent = "Завершённых игр пока нет.";
         return;
     }
 
     games.forEach((g, index) => {
         const row = document.createElement("div");
         row.className = "event-row";
+
+        if (typeof onGameClick === "function" && g.file) {
+            row.classList.add("clickable");
+            row.addEventListener("click", () => onGameClick(g));
+        }
 
         const orderCell = document.createElement("div");
         orderCell.className = "event-col num-col";
@@ -397,21 +446,66 @@ function renderFinishedList(indexData) {
         row.appendChild(orderCell);
         row.appendChild(descCell);
         row.appendChild(scoreCell);
-        dom.eventsList.appendChild(row);
+        target.appendChild(row);
     });
 }
 
+async function showFinishedGameProtocol(gameEntry) {
+    if (!gameEntry || !gameEntry.file) return;
+
+    try {
+        dom.stateMessage.classList.remove("error");
+        dom.stateMessage.classList.add("loading");
+        dom.stateMessage.textContent = "Загрузка протокола игры...";
+
+        const gameData = await fetchJson(gameEntry.file);
+
+        const teams = gameData.teams || {};
+        const redName = (teams.RED && teams.RED.name) || gameEntry.teamRed || "Красные";
+        const whiteName = (teams.WHITE && teams.WHITE.name) || gameEntry.teamWhite || "Белые";
+
+        const container = dom.modalContent;
+        container.innerHTML = "";
+
+        const meta = document.createElement("div");
+        meta.className = "modal-game-meta";
+        const dateStr = formatDateTime(gameData.date || gameEntry.date || "");
+        const arena = gameData.arena || gameEntry.arena || "";
+        meta.textContent = (dateStr ? dateStr + " — " : "") + arena;
+        container.appendChild(meta);
+
+        const list = document.createElement("div");
+        list.className = "events-list protocol-list";
+
+        buildProtocolEvents(gameData, redName, whiteName, list);
+        container.appendChild(list);
+
+        openModal("Протокол игры");
+
+        dom.stateMessage.classList.remove("loading");
+        dom.stateMessage.textContent = "";
+    } catch (e) {
+        console.error(e);
+        dom.stateMessage.classList.remove("loading");
+        dom.stateMessage.classList.add("error");
+        dom.stateMessage.textContent = "Ошибка загрузки протокола завершённой игры: " + e.message;
+    }
+}
+
+
+
 // Таблица лидеров (mode: POINTS / GOALS / WINS)
-function renderLeaders(statsData, mode) {
-    resetEventsListClasses();
-    dom.eventsList.classList.add("leaders-table");
+function renderLeaders(statsData, mode, container) {
+    const target = container || dom.eventsList;
+    resetEventsListClasses && resetEventsListClasses();
+    target.classList.add("leaders-table");
 
     if (mode === PANEL_MODE.LEADERS_POINTS) {
-        setEventsTitle("Бомбардиры");
+        setEventsTitle && setEventsTitle("Бомбардиры");
     } else if (mode === PANEL_MODE.LEADERS_GOALS) {
-        setEventsTitle("Снайперы");
+        setEventsTitle && setEventsTitle("Снайперы");
     } else {
-        setEventsTitle("Победы");
+        setEventsTitle && setEventsTitle("Победы");
     }
 
     const players = Array.isArray(statsData.players) ? statsData.players.slice() : [];
@@ -438,7 +532,6 @@ function renderLeaders(statsData, mode) {
             a.name.localeCompare(b.name, "ru")
         );
     } else {
-        // LEADERS_WINS
         players.sort((a, b) =>
             b.wins - a.wins ||
             b.games - a.games ||
@@ -446,14 +539,13 @@ function renderLeaders(statsData, mode) {
         );
     }
 
-    dom.eventsList.innerHTML = "";
+    target.innerHTML = "";
 
     if (players.length === 0) {
-        dom.eventsList.textContent = "Статистика игроков пока недоступна.";
+        target.textContent = "Статистика игроков пока недоступна.";
         return;
     }
 
-    // Заголовок таблицы
     const header = document.createElement("div");
     header.className = "event-row table-header";
 
@@ -477,7 +569,6 @@ function renderLeaders(statsData, mode) {
         addHeaderCell(header, "Голы");
         addHeaderCell(header, "Матчи");
     } else {
-        // LEADERS_WINS
         addHeaderCell(header, "№");
         addHeaderCell(header, "Игрок");
         addHeaderCell(header, "Матчи");
@@ -485,9 +576,8 @@ function renderLeaders(statsData, mode) {
         addHeaderCell(header, "Поражения");
     }
 
-    dom.eventsList.appendChild(header);
+    target.appendChild(header);
 
-    // Строки игроков
     players.forEach((p, index) => {
         const row = document.createElement("div");
         row.className = "event-row table-row";
@@ -500,28 +590,29 @@ function renderLeaders(statsData, mode) {
         }
 
         if (mode === PANEL_MODE.LEADERS_POINTS) {
-            addCell(index + 1);                        // №
-            addCell(p.name || "Без имени");            // Игрок
-            addCell(p.points);                         // Очки
-            addCell(p.goals);                          // Голы
-            addCell(p.assists);                        // Передачи
-            addCell(p.games);                          // Матчи
+            addCell(index + 1);
+            addCell(p.name || "Без имени");
+            addCell(p.points);
+            addCell(p.goals);
+            addCell(p.assists);
+            addCell(p.games);
         } else if (mode === PANEL_MODE.LEADERS_GOALS) {
-            addCell(index + 1);                        // №
-            addCell(p.name || "Без имени");            // Игрок
-            addCell(p.goals);                          // Голы
-            addCell(p.games);                          // Матчи
+            addCell(index + 1);
+            addCell(p.name || "Без имени");
+            addCell(p.goals);
+            addCell(p.games);
         } else {
-            addCell(index + 1);                        // №
-            addCell(p.name || "Без имени");            // Игрок
-            addCell(p.games);                          // Матчи
-            addCell(p.wins);                           // Победы
-            addCell(p.losses);                         // Поражения
+            addCell(index + 1);
+            addCell(p.name || "Без имени");
+            addCell(p.games);
+            addCell(p.wins);
+            addCell(p.losses);
         }
 
-        dom.eventsList.appendChild(row);
+        target.appendChild(row);
     });
 }
+
 
 // ========== ЗАГРУЗКА АКТИВНОЙ ИГРЫ ==========
 
@@ -559,8 +650,6 @@ async function loadAndRenderActiveGame() {
 // ========== ЗАГРУЗКА ЗАВЕРШЁННЫХ ИГР ==========
 
 async function showFinishedGames() {
-    currentPanelMode = PANEL_MODE.FINISHED;
-
     try {
         dom.stateMessage.classList.remove("error");
         dom.stateMessage.classList.add("loading");
@@ -575,7 +664,12 @@ async function showFinishedGames() {
         const finishedData = await fetchJson(season.finishedIndex);
         lastFinishedIndex = finishedData;
 
-        renderFinishedList(finishedData);
+        dom.modalContent.innerHTML = "";
+        renderFinishedList(finishedData, dom.modalContent, (game) => {
+            showFinishedGameProtocol(game);
+        });
+
+        openModal("Завершённые игры");
 
         dom.stateMessage.classList.remove("loading");
         dom.stateMessage.textContent = "";
@@ -587,11 +681,10 @@ async function showFinishedGames() {
     }
 }
 
+
 // ========== ЗАГРУЗКА СТАТИСТИКИ ИГРОКОВ ==========
 
 async function showLeaders(mode) {
-    currentPanelMode = mode;
-
     const label =
         mode === PANEL_MODE.LEADERS_POINTS ? "Загрузка лучших бомбардиров..." :
         mode === PANEL_MODE.LEADERS_GOALS ? "Загрузка лучших снайперов..." :
@@ -611,7 +704,16 @@ async function showLeaders(mode) {
         const statsData = await fetchJson(season.playersStats);
         lastPlayersStats = statsData;
 
-        renderLeaders(statsData, mode);
+        dom.modalContent.innerHTML = "";
+        renderLeaders(statsData, mode, dom.modalContent);
+
+        if (mode === PANEL_MODE.LEADERS_POINTS) {
+            openModal("Бомбардиры");
+        } else if (mode === PANEL_MODE.LEADERS_GOALS) {
+            openModal("Снайперы");
+        } else {
+            openModal("Победы");
+        }
 
         dom.stateMessage.classList.remove("loading");
         dom.stateMessage.textContent = "";
@@ -622,6 +724,7 @@ async function showLeaders(mode) {
         dom.stateMessage.textContent = "Ошибка загрузки статистики игроков: " + e.message;
     }
 }
+
 
 // ========== ОБРАБОТЧИКИ МЕНЮ ==========
 

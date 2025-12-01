@@ -390,7 +390,6 @@ function renderFinishedList(indexData, container, onGameClick) {
     if (!target) return;
 
     target.innerHTML = "";
-    target.classList.add("finished-list");
 
     const games = Array.isArray(indexData.games) ? indexData.games.slice() : [];
 
@@ -405,25 +404,40 @@ function renderFinishedList(indexData, container, onGameClick) {
         return;
     }
 
+    const wrapper = document.createElement("div");
+    wrapper.className = "finished-table-wrapper";
+
+    const table = document.createElement("table");
+    table.className = "finished-table";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    function addTh(text) {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headRow.appendChild(th);
+    }
+
+    addTh("№");
+    addTh("Дата");
+    addTh("Команды");
+    addTh("Счёт");
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
     games.forEach((g, index) => {
-        const row = document.createElement("div");
-        row.className = "event-row clickable";
+        const tr = document.createElement("tr");
 
         if (typeof onGameClick === "function" && g.file) {
-            row.addEventListener("click", () => onGameClick(g));
+            tr.classList.add("clickable");
+            tr.addEventListener("click", () => onGameClick(g));
         }
 
-        const orderCell = document.createElement("div");
-        orderCell.className = "event-col num-col";
-        orderCell.textContent = (index + 1) + ".";
-
-        const descCell = document.createElement("div");
-        descCell.className = "event-col main-col";
-
-        const scoreCell = document.createElement("div");
-        scoreCell.className = "event-col score-col";
-
-        const dateStr = formatDateTime(g.date);
+        const dateStr = formatDateOnly(g.date);
         const arena = g.arena || "";
         const teamRed = g.teamRed || "Красные";
         const teamWhite = g.teamWhite || "Белые";
@@ -431,21 +445,23 @@ function renderFinishedList(indexData, container, onGameClick) {
         const scoreRed = typeof g.scoreRed === "number" ? g.scoreRed : "?";
         const scoreWhite = typeof g.scoreWhite === "number" ? g.scoreWhite : "?";
 
-        scoreCell.textContent = scoreRed + ":" + scoreWhite;
+        function addTd(text) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+        }
 
-        const line = document.createElement("span");
-        line.innerHTML =
-            (dateStr ? dateStr + " — " : "") +
-            (arena ? arena + " — " : "") +
-            "<strong>" + teamRed + "</strong> vs <strong>" + teamWhite + "</strong>";
+        addTd(index + 1);
+        addTd(dateStr + (arena ? " — " + arena : ""));
+        addTd(teamRed + " — " + teamWhite);
+        addTd(scoreRed + ":" + scoreWhite);
 
-        descCell.appendChild(line);
-
-        row.appendChild(orderCell);
-        row.appendChild(descCell);
-        row.appendChild(scoreCell);
-        target.appendChild(row);
+        tbody.appendChild(tr);
     });
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    target.appendChild(wrapper);
 }
 
 async function showFinishedGameProtocol(gameEntry) {

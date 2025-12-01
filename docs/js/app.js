@@ -48,7 +48,7 @@ function computeDataBaseUrl(indexUrl) {
     if (!indexUrl) return "";
     try {
         const u = new URL(indexUrl, window.location.href);
-        const path = u.pathname.replace(/\/[^\/]*$/, "/"); // до последнего /
+        const path = u.pathname.replace(/\/[^/]*$/, "/");
         return u.origin + path;
     } catch (_) {
         const idx = indexUrl.lastIndexOf("/");
@@ -59,7 +59,6 @@ function computeDataBaseUrl(indexUrl) {
 
 const DATA_BASE_URL = computeDataBaseUrl(GLOBAL_INDEX_URL);
 
-// Нормализуем относительный путь/URL в абсолютный и добавляем ?t=... для обхода кеша
 function buildUrl(pathOrUrl) {
     let url = pathOrUrl;
 
@@ -72,7 +71,6 @@ function buildUrl(pathOrUrl) {
     const separator = url.includes("?") ? "&" : "?";
     return url + separator + "t=" + Date.now();
 }
-let firstActiveLoad = true;
 
 async function fetchJson(pathOrUrl) {
     const url = buildUrl(pathOrUrl);
@@ -87,7 +85,7 @@ async function fetchJson(pathOrUrl) {
 
 // ========== ГЛОБАЛЬНЫЙ ИНДЕКС ==========
 
-let lastGlobalIndex = null; // index.json
+let lastGlobalIndex = null;
 
 async function ensureGlobalIndex() {
     if (lastGlobalIndex) return lastGlobalIndex;
@@ -105,14 +103,13 @@ function getCurrentSeasonEntry(indexData) {
     const currentId = indexData.currentSeason;
     let season = seasons.find(s => s.id === currentId);
     if (!season) {
-        season = seasons[0]; // запасной вариант
+        season = seasons[0];
     }
     return season;
 }
 
 // ========== ФОРМАТЫ ДАТ ==========
 
-// Только дата: "29 ноября 2025 года"
 const MONTHS_RU = [
     "января", "февраля", "марта", "апреля", "мая", "июня",
     "июля", "августа", "сентября", "октября", "ноября", "декабря"
@@ -128,7 +125,6 @@ function formatDateOnly(iso) {
     return day + " " + month + " " + year + " года";
 }
 
-// Дата+время (для списков и lastGameDate)
 function formatDateTime(iso) {
     if (!iso) return "";
     const d = new Date(iso);
@@ -143,6 +139,7 @@ function formatDateTime(iso) {
 }
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
+
 function setStatus(finished, hasStarted) {
     if (!dom.gameStatus) return;
     dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
@@ -202,7 +199,7 @@ function renderScoreboardBase(data) {
         dom.gameDate.textContent = formatDateOnly(data.date);
     }
     if (dom.gameId) {
-        dom.gameId.textContent = ""; // пока не показываем id
+        dom.gameId.textContent = "";
     }
 
     const finished = !!data.finished;
@@ -246,7 +243,7 @@ function renderScoreboardBase(data) {
     return { redName, whiteName };
 }
 
-// ========== ПРОТОКОЛ (общий билдер) ==========
+// ========== ПРОТОКОЛ ==========
 
 function buildProtocolEvents(data, redName, whiteName, target) {
     if (!target) return;
@@ -307,7 +304,7 @@ function buildProtocolEvents(data, redName, whiteName, target) {
             line.innerHTML =
                 "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
                 (g.assist1
-                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
+                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assист2 : "") + ")"
                     : "");
 
             descCell.appendChild(tag);
@@ -344,7 +341,6 @@ function buildProtocolEvents(data, redName, whiteName, target) {
     });
 }
 
-// Протокол текущего матча в правой карточке
 function renderProtocol(data, redName, whiteName) {
     resetEventsListClasses();
     setEventsTitle("Протокол матча");
@@ -383,8 +379,6 @@ if (dom.modalBackdrop) {
 
 // ========== ЗАВЕРШЁННЫЕ ИГРЫ ==========
 
-let lastFinishedIndex = null;
-
 function renderFinishedList(indexData, container, onGameClick) {
     const target = container || dom.modalContent;
     if (!target) return;
@@ -393,10 +387,11 @@ function renderFinishedList(indexData, container, onGameClick) {
 
     const games = Array.isArray(indexData.games) ? indexData.games.slice() : [];
 
+    // от старой к новой
     games.sort((a, b) => {
         const da = new Date(a.date || 0).getTime();
         const db = new Date(b.date || 0).getTime();
-        return db - da;
+        return da - db;
     });
 
     if (games.length === 0) {
@@ -468,23 +463,29 @@ async function showFinishedGameProtocol(gameEntry) {
     if (!gameEntry || !gameEntry.file) return;
 
     try {
-        dom.stateMessage.classList.remove("error");
-        dom.stateMessage.classList.add("loading");
-        dom.stateMessage.textContent = "Загрузка протокола игры...";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = "Загрузка протокола игры...";
+        }
 
         const gameData = await fetchJson(gameEntry.file);
 
         const teams = gameData.teams || {};
-        const redName =
-            (teams.RED && teams.RED.name) || gameEntry.teamRed || "Красные";
-        const whiteName =
-            (teams.WHITE && teams.WHITE.name) || gameEntry.teamWhite || "Белые";
+        const redTeam = teams.RED || {};
+        const whiteTeam = teams.WHITE || {};
+
+        const redName = redTeam.name || gameEntry.teamRed || "Красные";
+        const whiteName = whiteTeam.name || gameEntry.teamWhite || "Белые";
+
+        const score = computeScore(gameData);
 
         const container = dom.modalContent;
         if (!container) return;
 
         container.innerHTML = "";
 
+        // верхний блок: дата + арена
         const meta = document.createElement("div");
         meta.className = "modal-game-meta";
         const dateStr = formatDateTime(gameData.date || gameEntry.date || "");
@@ -492,30 +493,114 @@ async function showFinishedGameProtocol(gameEntry) {
         meta.textContent = (dateStr ? dateStr + " — " : "") + arena;
         container.appendChild(meta);
 
+        // блок со счётом и названиями / составами
+        const summary = document.createElement("div");
+        summary.className = "modal-game-summary";
+
+        const scoreLine = document.createElement("div");
+        scoreLine.className = "modal-game-scoreline";
+
+        const teamRedBlock = document.createElement("div");
+        teamRedBlock.className = "modal-team-block red";
+
+        const teamWhiteBlock = document.createElement("div");
+        teamWhiteBlock.className = "modal-team-block white";
+
+        const redNameEl = document.createElement("div");
+        redNameEl.className = "modal-team-name";
+        redNameEl.textContent = redName;
+
+        const whiteNameEl = document.createElement("div");
+        whiteNameEl.className = "modal-team-name";
+        whiteNameEl.textContent = whiteName;
+
+        const scoreEl = document.createElement("div");
+        scoreEl.className = "modal-big-score";
+        scoreEl.textContent = score.red + " : " + score.white;
+
+        teamRedBlock.appendChild(redNameEl);
+        teamWhiteBlock.appendChild(whiteNameEl);
+
+        scoreLine.appendChild(teamRedBlock);
+        scoreLine.appendChild(scoreEl);
+        scoreLine.appendChild(teamWhiteBlock);
+
+        summary.appendChild(scoreLine);
+
+        // составы
+        const rostersWrapper = document.createElement("div");
+        rostersWrapper.className = "modal-rosters";
+
+        const redRosterCol = document.createElement("div");
+        const whiteRosterCol = document.createElement("div");
+
+        const redRosterTitle = document.createElement("div");
+        redRosterTitle.className = "modal-roster-title red";
+        redRosterTitle.textContent = redName;
+
+        const whiteRosterTitle = document.createElement("div");
+        whiteRosterTitle.className = "modal-roster-title white";
+        whiteRosterTitle.textContent = whiteName;
+
+        const redList = document.createElement("ul");
+        redList.className = "modal-roster-list";
+        (redTeam.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            redList.appendChild(li);
+        });
+
+        const whiteList = document.createElement("ul");
+        whiteList.className = "modal-roster-list";
+        (whiteTeam.players || []).forEach(p => {
+            const li = document.createElement("li");
+            li.textContent = p;
+            whiteList.appendChild(li);
+        });
+
+        redRosterCol.appendChild(redRosterTitle);
+        redRosterCol.appendChild(redList);
+
+        whiteRosterCol.appendChild(whiteRosterTitle);
+        whiteRosterCol.appendChild(whiteList);
+
+        rostersWrapper.appendChild(redRosterCol);
+        rostersWrapper.appendChild(whiteRosterCol);
+
+        summary.appendChild(rostersWrapper);
+
+        container.appendChild(summary);
+
+        // протокол
         const list = document.createElement("div");
         list.className = "events-list protocol-list";
-
         buildProtocolEvents(gameData, redName, whiteName, list);
         container.appendChild(list);
 
         openModal("Протокол игры");
 
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.textContent = "";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.textContent = "";
+        }
     } catch (e) {
         console.error(e);
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.classList.add("error");
-        dom.stateMessage.textContent =
-            "Ошибка загрузки протокола завершённой игры: " + e.message;
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки протокола завершённой игры: " + e.message;
+        }
     }
 }
 
 async function showFinishedGames() {
     try {
-        dom.stateMessage.classList.remove("error");
-        dom.stateMessage.classList.add("loading");
-        dom.stateMessage.textContent = "Загрузка завершённых игр...";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = "Загрузка завершённых игр...";
+        }
 
         const indexData = await ensureGlobalIndex();
         const season = getCurrentSeasonEntry(indexData);
@@ -524,7 +609,6 @@ async function showFinishedGames() {
         }
 
         const finishedData = await fetchJson(season.finishedIndex);
-        lastFinishedIndex = finishedData;
 
         if (dom.modalContent) {
             dom.modalContent.innerHTML = "";
@@ -535,26 +619,28 @@ async function showFinishedGames() {
 
         openModal("Завершённые игры");
 
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.textContent = "";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.textContent = "";
+        }
     } catch (e) {
         console.error(e);
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.classList.add("error");
-        dom.stateMessage.textContent =
-            "Ошибка загрузки завершённых игр: " + e.message;
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки завершённых игр: " + e.message;
+        }
     }
 }
 
-// ========== ЛИДЕРЫ (таблицы в модалке) ==========
+// ========== ЛИДЕРЫ ==========
 
 const PANEL_MODE = {
     LEADERS_POINTS: "leaders_points",
     LEADERS_GOALS: "leaders_goals",
     LEADERS_WINS: "leaders_wins"
 };
-
-let lastPlayersStats = null;
 
 function renderLeaders(statsData, mode, container) {
     const target = container || dom.modalContent || dom.eventsList;
@@ -568,7 +654,7 @@ function renderLeaders(statsData, mode, container) {
         p.assists = Number(p.assists || 0);
         p.points = Number(p.points || (p.goals + p.assists));
         p.wins = Number(p.wins || 0);
-        p.losses = Math.max(0, p.games - p.wins);
+        // поражения и ничьи в статистике есть, но мы их не считаем и не показываем
     });
 
     if (mode === PANEL_MODE.LEADERS_POINTS) {
@@ -584,6 +670,7 @@ function renderLeaders(statsData, mode, container) {
             a.name.localeCompare(b.name, "ru")
         );
     } else {
+        // LEADERS_WINS
         players.sort((a, b) =>
             b.wins - a.wins ||
             b.games - a.games ||
@@ -625,12 +712,12 @@ function renderLeaders(statsData, mode, container) {
         addTh("Игрок");
         addTh("Голы");
         addTh("Матчи");
-    } else { // LEADERS_WINS
+    } else {
+        // Победы: без поражений
         addTh("№");
         addTh("Игрок");
         addTh("Матчи");
         addTh("Победы");
-        addTh("Поражения");
     }
 
     thead.appendChild(headRow);
@@ -664,7 +751,6 @@ function renderLeaders(statsData, mode, container) {
             addTd(p.name || "Без имени");
             addTd(p.games);
             addTd(p.wins);
-            addTd(p.losses);
         }
 
         tbody.appendChild(tr);
@@ -682,9 +768,11 @@ async function showLeaders(mode) {
         "Загрузка лидеров по победам...";
 
     try {
-        dom.stateMessage.classList.remove("error");
-        dom.stateMessage.classList.add("loading");
-        dom.stateMessage.textContent = label;
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = label;
+        }
 
         const indexData = await ensureGlobalIndex();
         const season = getCurrentSeasonEntry(indexData);
@@ -693,7 +781,6 @@ async function showLeaders(mode) {
         }
 
         const statsData = await fetchJson(season.playersStats);
-        lastPlayersStats = statsData;
 
         if (dom.modalContent) {
             dom.modalContent.innerHTML = "";
@@ -708,18 +795,24 @@ async function showLeaders(mode) {
             openModal("Победы");
         }
 
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.textContent = "";
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.textContent = "";
+        }
     } catch (e) {
         console.error(e);
-        dom.stateMessage.classList.remove("loading");
-        dom.stateMessage.classList.add("error");
-        dom.stateMessage.textContent =
-            "Ошибка загрузки статистики игроков: " + e.message;
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки статистики игроков: " + e.message;
+        }
     }
 }
 
-// ========== ЗАГРУЗКА АКТИВНОЙ ИГРЫ ==========
+// ========== АКТИВНАЯ ИГРА ==========
+
+let firstActiveLoad = true;
 
 async function loadAndRenderActiveGame() {
     try {
@@ -757,7 +850,6 @@ async function loadAndRenderActiveGame() {
     }
 }
 
-
 // ========== ОБРАБОТЧИКИ МЕНЮ ==========
 
 if (dom.menuFinished) {
@@ -784,12 +876,10 @@ if (dom.menuWins) {
     });
 }
 
-// ========== СТАРТ АВТООБНОВЛЕНИЯ ПРОТОКОЛА ==========
+// ========== СТАРТ АВТООБНОВЛЕНИЯ ==========
 
-// При старте — сразу подтягиваем активную игру
 loadAndRenderActiveGame();
 
-// Автообновление табло, независимо от модалок
 setInterval(() => {
     loadAndRenderActiveGame();
 }, REFRESH_INTERVAL_MS);
@@ -825,4 +915,4 @@ if (dom.fsToggle) {
     dom.fsToggle.addEventListener("click", toggleFullscreen);
 }
 
-// Авто-fullscreen отключён осознанно
+// авто-fullscreen не включаем специально

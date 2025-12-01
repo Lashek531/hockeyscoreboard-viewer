@@ -295,3 +295,77 @@ body {
     text-align: right;
     font-weight: bold;
 }
+/* ===== Модальные окна ===== */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-backdrop.visible {
+    display: flex;
+}
+
+.modal-window {
+    background: #111;
+    border-radius: 8px;
+    padding: 16px 20px;
+    max-width: 900px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.modal-content {
+    overflow-y: auto;
+    flex: 1 1 auto;
+}
+
+.modal-footer {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.modal-ok-btn {
+    padding: 6px 16px;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+/* Строки в модалке, по которым можно кликать (завершённые игры) */
+.modal-content .event-row.clickable {
+    cursor: pointer;
+}
+
+.modal-content .event-row.clickable:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Немного стилей под протокол завершённой игры в модалке */
+.modal-game-meta {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.modal-content .protocol-list .event-row {
+    display: grid;
+    grid-template-columns: 40px 80px 1fr;
+    column-gap: 8px;
+    padding: 3px 0;
+}

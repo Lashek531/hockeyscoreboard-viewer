@@ -71,6 +71,7 @@ body {
     border-color: rgba(255, 193, 7, 0.7);
 }
 
+/* Меню внизу */
 .menu-bar {
     display: flex;
     flex-wrap: wrap;
@@ -119,6 +120,7 @@ body {
 .state.error { color: #ff8a80; }
 .state.loading { color: #90caf9; }
 
+/* Табло */
 .scoreboard {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -151,6 +153,7 @@ body {
     opacity: 0.8;
 }
 
+/* Блоки протокола и составов */
 .events-block {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
@@ -180,6 +183,8 @@ body {
     overflow-y: auto;
     font-size: 14px;
 }
+
+/* Обычный протокол матча (справа на экране) */
 .event-row {
     display: grid;
     grid-template-columns: 40px 70px minmax(0, 1fr);
@@ -226,6 +231,7 @@ body {
     color: #90caf9;
 }
 
+/* Составы */
 .roster-list {
     font-size: 13px;
     display: grid;
@@ -250,51 +256,13 @@ body {
     padding: 1px 0;
     opacity: 0.9;
 }
+
 .footer {
     font-size: 11px;
     opacity: 0.6;
     text-align: right;
 }
-/* Таблицы лидеров и завершённых игр */
 
-.events-list.leaders-table .event-row,
-.events-list.finished-list .event-row {
-    display: grid;
-    column-gap: 8px;
-    padding: 4px 0;
-    align-items: center;
-}
-
-/* Бомбардиры / Снайперы / Победы:
-   для универсальности делаем 6 колонок, лишние просто пустые */
-.events-list.leaders-table .table-header,
-.events-list.leaders-table .table-row {
-    grid-template-columns: 40px 2fr 1fr 1fr 1fr 1fr;
-}
-
-.events-list.leaders-table .table-header {
-    font-weight: bold;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-    margin-bottom: 4px;
-}
-
-.events-list.leaders-table .table-cell {
-    font-size: 0.9rem;
-}
-
-/* Завершённые игры: номер, описание, счёт */
-.events-list.finished-list .event-row {
-    grid-template-columns: 40px 1fr 80px;
-}
-
-.events-list.finished-list .num-col {
-    font-weight: bold;
-}
-
-.events-list.finished-list .score-col {
-    text-align: right;
-    font-weight: bold;
-}
 /* ===== Модальные окна ===== */
 
 .modal-backdrop {
@@ -312,18 +280,17 @@ body {
 }
 
 .modal-window {
-    background: #181b23;   /* тот же тон, что у основных карточек */
+    background: rgba(15, 23, 42, 0.97); /* стилистика как у карточек */
     color: #fff;
-    border-radius: 8px;
+    border-radius: 16px;
     padding: 16px 20px;
     max-width: 900px;
     width: 90%;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
-
 
 .modal-title {
     font-size: 1.2rem;
@@ -343,22 +310,19 @@ body {
 
 .modal-ok-btn {
     padding: 6px 16px;
-    font-size: 1rem;
-    border-radius: 4px;
-    border: none;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148,163,184,0.7);
+    background: rgba(15,23,42,0.9);
+    color: #e2e8f0;
     cursor: pointer;
 }
-
-/* Строки в модалке, по которым можно кликать (завершённые игры) */
-.modal-content .event-row.clickable {
-    cursor: pointer;
+.modal-ok-btn:hover {
+    background: rgba(30, 64, 175, 0.9);
+    border-color: rgba(191, 219, 254, 0.9);
 }
 
-.modal-content .event-row.clickable:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-}
-
-/* Немного стилей под протокол завершённой игры в модалке */
+/* Строки протокола в модалке (для завершённой игры) */
 .modal-game-meta {
     margin-bottom: 8px;
     font-size: 0.9rem;
@@ -370,4 +334,79 @@ body {
     grid-template-columns: 40px 80px 1fr;
     column-gap: 8px;
     padding: 3px 0;
+}
+
+/* ===== Таблица лидеров ===== */
+
+.leaders-table-wrapper {
+    max-width: 100%;
+}
+
+.leaders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.leaders-table thead tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.leaders-table th,
+.leaders-table td {
+    padding: 6px 12px;
+    text-align: center;     /* и заголовки, и значения по центру */
+    white-space: nowrap;    /* всё в одну строку */
+}
+
+/* колонка с ФИО — шире и по левому краю */
+.leaders-table th:nth-child(2),
+.leaders-table td:nth-child(2) {
+    text-align: left;
+    min-width: 220px;
+}
+
+/* небольшая "зебра" по строкам */
+.leaders-table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* ===== Таблица завершённых игр ===== */
+
+.finished-table-wrapper {
+    max-width: 100%;
+}
+
+.finished-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.finished-table thead tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.finished-table th,
+.finished-table td {
+    padding: 6px 12px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* колонка "Команды" — шире и слева */
+.finished-table th:nth-child(3),
+.finished-table td:nth-child(3) {
+    text-align: left;
+    min-width: 260px;
+}
+
+/* лёгкая "зебра" и подсветка при наведении */
+.finished-table tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.finished-table tr.clickable:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
 }

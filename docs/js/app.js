@@ -140,19 +140,13 @@ function formatDateTime(iso) {
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
 
-/**
- * finished = true  -> красный "Матч завершён"
- * finished = false и есть составы -> зелёный мигающий "Идёт матч"
- * finished = false и составов нет -> жёлтый "Матч запланирован"
- */
-function setStatus(finished, hasLineups) {
+function setStatus(finished, hasStarted) {
     if (!dom.gameStatus) return;
     dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
-
     if (finished) {
         dom.gameStatus.classList.add("status-finished");
         dom.gameStatus.textContent = "Матч завершён";
-    } else if (hasLineups) {
+    } else if (hasStarted) {
         dom.gameStatus.classList.add("status-live");
         dom.gameStatus.textContent = "Идёт матч";
     } else {
@@ -242,7 +236,7 @@ function renderScoreboardBase(data) {
         });
     }
 
-    // --- КЛЮЧЕВОЙ БЛОК: когда считать, что матч начался ---
+    // --- НОВАЯ ЛОГИКА СТАТУСА ---
     const finished = !!data.finished;
 
     // есть ли хоть один гол
@@ -253,18 +247,14 @@ function renderScoreboardBase(data) {
         (Array.isArray(red.players) && red.players.length > 0) ||
         (Array.isArray(white.players) && white.players.length > 0);
 
-    // логика "как раньше" + расширение:
-    // - если finished → "Матч завершён"
-    // - иначе если есть голы ИЛИ составы → "Идёт матч"
-    // - иначе → "Матч запланирован"
+    // матч считается начавшимся, если есть гол ИЛИ есть составы
     const hasStarted = hasGoals || hasLineups;
 
     setStatus(finished, hasStarted);
-    // ------------------------------------------------------
+    // ---------------------------
 
     return { redName, whiteName };
 }
-
 
 // ========== ПРОТОКОЛ ==========
 
@@ -313,38 +303,37 @@ function buildProtocolEvents(data, redName, whiteName, target) {
         const descCell = document.createElement("div");
         descCell.className = "event-desc";
 
-if (ev.type === "goal") {
-    const g = ev.raw;
-    const teamName = g.team === "RED" ? redName :
-        g.team === "WHITE" ? whiteName : (g.team || "Команда");
+        if (ev.type === "goal") {
+            const g = ev.raw;
+            const teamName = g.team === "RED" ? redName :
+                g.team === "WHITE" ? whiteName : (g.team || "Команда");
 
-    const tag = document.createElement("span");
-    tag.className = "event-tag " +
-        (g.team === "RED" ? "goal-red" : "goal-white");
-    tag.textContent = "Гол";
+            const tag = document.createElement("span");
+            tag.className = "event-tag " +
+                (g.team === "RED" ? "goal-red" : "goal-white");
+            tag.textContent = "Гол";
 
-    const assists = [];
-    if (g.assist1 && g.assist1 !== "undefined") assists.push(g.assist1);
-    if (g.assist2 && g.assist2 !== "undefined") assists.push(g.assist2);
+            // аккуратная сборка ассистов без "undefined"
+            const assists = [];
+            if (g.assist1 && g.assist1 !== "undefined") assists.push(g.assist1);
+            if (g.assist2 && g.assist2 !== "undefined") assists.push(g.assist2);
 
-    const assistsText = assists.length > 0
-        ? " (передачи: " + assists.join(", ") + ")"
-        : "";
+            const assistsText = assists.length > 0
+                ? " (передачи: " + assists.join(", ") + ")"
+                : "";
 
-    const line = document.createElement("span");
-    line.innerHTML =
-        "<strong>" + teamName + "</strong>: " +
-        (g.scorer || "Неизвестный игрок") +
-        assistsText;
+            const line = document.createElement("span");
+            line.innerHTML =
+                "<strong>" + teamName + "</strong>: " +
+                (g.scorer || "Неизвестный игрок") +
+                assistsText;
 
-    descCell.appendChild(tag);
-    descCell.appendChild(document.createTextNode(" "));
-    descCell.appendChild(line);
+            descCell.appendChild(tag);
+            descCell.appendChild(document.createTextNode(" "));
+            descCell.appendChild(line);
 
-    scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
-    scoreCell.textContent = g.scoreAfter || "";
-}
-
+            scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
+            scoreCell.textContent = g.scoreAfter || "";
         } else if (ev.type === "roster") {
             const rc = ev.raw;
             const tag = document.createElement("span");
@@ -703,8 +692,7 @@ function renderLeaders(statsData, mode, container) {
             a.name.localeCompare(b.name, "ru")
         );
     } else {
-        // LEADERS_WINS:
-        // сортируем по победам, потом по ничьим, потом по меньшему числу поражений, потом по матчам
+        // Лидеры по победам: победы, затем ничьи, затем меньше поражений, затем матчи
         players.sort((a, b) =>
             b.wins - a.wins ||
             b.draws - a.draws ||
@@ -749,7 +737,7 @@ function renderLeaders(statsData, mode, container) {
         addTh("Голы");
         addTh("Матчи");
     } else {
-        // Количество побед: расширенная версия
+        // Количество побед: расширенная таблица
         addTh("№");
         addTh("Игрок");
         addTh("Матчи");
@@ -785,7 +773,6 @@ function renderLeaders(statsData, mode, container) {
             addTd(p.goals);
             addTd(p.games);
         } else {
-            // Победы + ничьи + поражения
             addTd(index + 1);
             addTd(p.name || "Без имени");
             addTd(p.games);
@@ -802,6 +789,54 @@ function renderLeaders(statsData, mode, container) {
     target.appendChild(wrapper);
 }
 
+async function showLeaders(mode) {
+    const label =
+        mode === PANEL_MODE.LEADERS_POINTS ? "Загрузка лучших бомбардиров..." :
+        mode === PANEL_MODE.LEADERS_GOALS ? "Загрузка лучших снайперов..." :
+        "Загрузка лидеров по победам...";
+
+    try {
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = label;
+        }
+
+        const indexData = await ensureGlobalIndex();
+        const season = getCurrentSeasonEntry(indexData);
+        if (!season || !season.playersStats) {
+            throw new Error("Для текущего сезона не указан playersStats.");
+        }
+
+        const statsData = await fetchJson(season.playersStats);
+
+        if (dom.modalContent) {
+            dom.modalContent.innerHTML = "";
+            renderLeaders(statsData, mode, dom.modalContent);
+        }
+
+        if (mode === PANEL_MODE.LEADERS_POINTS) {
+            openModal("Бомбардиры");
+        } else if (mode === PANEL_MODE.LEADERS_GOALS) {
+            openModal("Снайперы");
+        } else {
+            openModal("Победы");
+        }
+
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.textContent = "";
+        }
+    } catch (e) {
+        console.error(e);
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки статистики игроков: " + e.message;
+        }
+    }
+}
 
 // ========== АКТИВНАЯ ИГРА ==========
 

@@ -140,19 +140,13 @@ function formatDateTime(iso) {
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
 
-/**
- * finished = true  -> красный "Матч завершён"
- * finished = false и есть составы -> зелёный мигающий "Идёт матч"
- * finished = false и составов нет -> жёлтый "Матч запланирован"
- */
-function setStatus(finished, hasLineups) {
+function setStatus(finished, hasStarted) {
     if (!dom.gameStatus) return;
     dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
-
     if (finished) {
         dom.gameStatus.classList.add("status-finished");
         dom.gameStatus.textContent = "Матч завершён";
-    } else if (hasLineups) {
+    } else if (hasStarted) {
         dom.gameStatus.classList.add("status-live");
         dom.gameStatus.textContent = "Идёт матч";
     } else {
@@ -242,16 +236,22 @@ function renderScoreboardBase(data) {
         });
     }
 
-    // Логика статуса:
-    // finished === true            -> завершён
-    // finished === false и есть составы -> идёт матч
-    // finished === false и составов нет -> запланирован
+    // --- Расширенная логика статуса матча ---
     const finished = !!data.finished;
+
+    // Есть ли хотя бы один гол
+    const hasGoals = Array.isArray(data.goals) && data.goals.length > 0;
+
+    // Есть ли хотя бы один игрок в любом составе
     const hasLineups =
         (Array.isArray(red.players) && red.players.length > 0) ||
         (Array.isArray(white.players) && white.players.length > 0);
 
-    setStatus(finished, hasLineups);
+    // Матч считается начавшимся, если есть гол ИЛИ уже появились составы
+    const hasStarted = hasGoals || hasLineups;
+
+    setStatus(finished, hasStarted);
+    // ----------------------------------------
 
     return { redName, whiteName };
 }
@@ -313,12 +313,20 @@ function buildProtocolEvents(data, redName, whiteName, target) {
                 (g.team === "RED" ? "goal-red" : "goal-white");
             tag.textContent = "Гол";
 
+            // Собираем ассистов без undefined и пустых значений
+            const assists = [];
+            if (g.assist1 && g.assist1 !== "undefined") assists.push(g.assist1);
+            if (g.assist2 && g.assist2 !== "undefined") assists.push(g.assist2);
+
+            const assistsText = assists.length
+                ? " (передачи: " + assists.join(", ") + ")"
+                : "";
+
             const line = document.createElement("span");
             line.innerHTML =
-                "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
-                (g.assist1
-                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
-                    : "");
+                "<strong>" + teamName + "</strong>: " +
+                (g.scorer || "Неизвестный игрок") +
+                assistsText;
 
             descCell.appendChild(tag);
             descCell.appendChild(document.createTextNode(" "));
@@ -667,7 +675,8 @@ function renderLeaders(statsData, mode, container) {
         p.assists = Number(p.assists || 0);
         p.points = Number(p.points || (p.goals + p.assists));
         p.wins = Number(p.wins || 0);
-        // поражения и ничьи в статистике есть, но мы их не считаем и не показываем
+        p.draws = Number(p.draws || 0);   // ничьи
+        p.losses = Number(p.losses || 0); // поражения
     });
 
     if (mode === PANEL_MODE.LEADERS_POINTS) {
@@ -683,9 +692,16 @@ function renderLeaders(statsData, mode, container) {
             a.name.localeCompare(b.name, "ru")
         );
     } else {
-        // LEADERS_WINS
+        // Лидеры по победам:
+        // 1) больше побед
+        // 2) больше ничьих
+        // 3) меньше поражений
+        // 4) больше матчей
+        // 5) имя
         players.sort((a, b) =>
             b.wins - a.wins ||
+            b.draws - a.draws ||
+            a.losses - b.losses ||
             b.games - a.games ||
             a.name.localeCompare(b.name, "ru")
         );
@@ -726,11 +742,13 @@ function renderLeaders(statsData, mode, container) {
         addTh("Голы");
         addTh("Матчи");
     } else {
-        // Победы: без поражений
+        // Количество побед: с ничьими и поражениями
         addTh("№");
         addTh("Игрок");
         addTh("Матчи");
         addTh("Победы");
+        addTh("Ничьи");
+        addTh("Поражения");
     }
 
     thead.appendChild(headRow);
@@ -764,6 +782,8 @@ function renderLeaders(statsData, mode, container) {
             addTd(p.name || "Без имени");
             addTd(p.games);
             addTd(p.wins);
+            addTd(p.draws);
+            addTd(p.losses);
         }
 
         tbody.appendChild(tr);

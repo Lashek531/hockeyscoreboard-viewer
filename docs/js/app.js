@@ -242,19 +242,29 @@ function renderScoreboardBase(data) {
         });
     }
 
-    // Логика статуса:
-    // finished === true            -> завершён
-    // finished === false и есть составы -> идёт матч
-    // finished === false и составов нет -> запланирован
+    // --- КЛЮЧЕВОЙ БЛОК: когда считать, что матч начался ---
     const finished = !!data.finished;
+
+    // есть ли хоть один гол
+    const hasGoals = Array.isArray(data.goals) && data.goals.length > 0;
+
+    // есть ли хотя бы один игрок в любом составе
     const hasLineups =
         (Array.isArray(red.players) && red.players.length > 0) ||
         (Array.isArray(white.players) && white.players.length > 0);
 
-    setStatus(finished, hasLineups);
+    // логика "как раньше" + расширение:
+    // - если finished → "Матч завершён"
+    // - иначе если есть голы ИЛИ составы → "Идёт матч"
+    // - иначе → "Матч запланирован"
+    const hasStarted = hasGoals || hasLineups;
+
+    setStatus(finished, hasStarted);
+    // ------------------------------------------------------
 
     return { redName, whiteName };
 }
+
 
 // ========== ПРОТОКОЛ ==========
 
@@ -676,7 +686,8 @@ function renderLeaders(statsData, mode, container) {
         p.assists = Number(p.assists || 0);
         p.points = Number(p.points || (p.goals + p.assists));
         p.wins = Number(p.wins || 0);
-        // поражения и ничьи в статистике есть, но мы их не считаем и не показываем
+        p.draws = Number(p.draws || 0);
+        p.losses = Number(p.losses || 0);
     });
 
     if (mode === PANEL_MODE.LEADERS_POINTS) {
@@ -692,9 +703,12 @@ function renderLeaders(statsData, mode, container) {
             a.name.localeCompare(b.name, "ru")
         );
     } else {
-        // LEADERS_WINS
+        // LEADERS_WINS:
+        // сортируем по победам, потом по ничьим, потом по меньшему числу поражений, потом по матчам
         players.sort((a, b) =>
             b.wins - a.wins ||
+            b.draws - a.draws ||
+            a.losses - b.losses ||
             b.games - a.games ||
             a.name.localeCompare(b.name, "ru")
         );
@@ -735,11 +749,13 @@ function renderLeaders(statsData, mode, container) {
         addTh("Голы");
         addTh("Матчи");
     } else {
-        // Победы: без поражений
+        // Количество побед: расширенная версия
         addTh("№");
         addTh("Игрок");
         addTh("Матчи");
         addTh("Победы");
+        addTh("Ничьи");
+        addTh("Поражения");
     }
 
     thead.appendChild(headRow);
@@ -769,10 +785,13 @@ function renderLeaders(statsData, mode, container) {
             addTd(p.goals);
             addTd(p.games);
         } else {
+            // Победы + ничьи + поражения
             addTd(index + 1);
             addTd(p.name || "Без имени");
             addTd(p.games);
             addTd(p.wins);
+            addTd(p.draws);
+            addTd(p.losses);
         }
 
         tbody.appendChild(tr);
@@ -783,54 +802,6 @@ function renderLeaders(statsData, mode, container) {
     target.appendChild(wrapper);
 }
 
-async function showLeaders(mode) {
-    const label =
-        mode === PANEL_MODE.LEADERS_POINTS ? "Загрузка лучших бомбардиров..." :
-        mode === PANEL_MODE.LEADERS_GOALS ? "Загрузка лучших снайперов..." :
-        "Загрузка лидеров по победам...";
-
-    try {
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("error");
-            dom.stateMessage.classList.add("loading");
-            dom.stateMessage.textContent = label;
-        }
-
-        const indexData = await ensureGlobalIndex();
-        const season = getCurrentSeasonEntry(indexData);
-        if (!season || !season.playersStats) {
-            throw new Error("Для текущего сезона не указан playersStats.");
-        }
-
-        const statsData = await fetchJson(season.playersStats);
-
-        if (dom.modalContent) {
-            dom.modalContent.innerHTML = "";
-            renderLeaders(statsData, mode, dom.modalContent);
-        }
-
-        if (mode === PANEL_MODE.LEADERS_POINTS) {
-            openModal("Бомбардиры");
-        } else if (mode === PANEL_MODE.LEADERS_GOALS) {
-            openModal("Снайперы");
-        } else {
-            openModal("Победы");
-        }
-
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("loading");
-            dom.stateMessage.textContent = "";
-        }
-    } catch (e) {
-        console.error(e);
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("loading");
-            dom.stateMessage.classList.add("error");
-            dom.stateMessage.textContent =
-                "Ошибка загрузки статистики игроков: " + e.message;
-        }
-    }
-}
 
 // ========== АКТИВНАЯ ИГРА ==========
 

@@ -140,13 +140,19 @@ function formatDateTime(iso) {
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
 
-function setStatus(finished, hasStarted) {
+/**
+ * finished = true  -> красный "Матч завершён"
+ * finished = false и есть составы -> зелёный мигающий "Идёт матч"
+ * finished = false и составов нет -> жёлтый "Матч запланирован"
+ */
+function setStatus(finished, hasLineups) {
     if (!dom.gameStatus) return;
     dom.gameStatus.classList.remove("status-finished", "status-live", "status-scheduled");
+
     if (finished) {
         dom.gameStatus.classList.add("status-finished");
         dom.gameStatus.textContent = "Матч завершён";
-    } else if (hasStarted) {
+    } else if (hasLineups) {
         dom.gameStatus.classList.add("status-live");
         dom.gameStatus.textContent = "Идёт матч";
     } else {
@@ -202,10 +208,6 @@ function renderScoreboardBase(data) {
         dom.gameId.textContent = "";
     }
 
-    const finished = !!data.finished;
-    const hasStarted = Array.isArray(data.goals) && data.goals.length > 0;
-    setStatus(finished, hasStarted);
-
     const teams = data.teams || {};
     const red = teams.RED || {};
     const white = teams.WHITE || {};
@@ -239,6 +241,17 @@ function renderScoreboardBase(data) {
             dom.rosterWhite.appendChild(li);
         });
     }
+
+    // Логика статуса:
+    // finished === true            -> завершён
+    // finished === false и есть составы -> идёт матч
+    // finished === false и составов нет -> запланирован
+    const finished = !!data.finished;
+    const hasLineups =
+        (Array.isArray(red.players) && red.players.length > 0) ||
+        (Array.isArray(white.players) && white.players.length > 0);
+
+    setStatus(finished, hasLineups);
 
     return { redName, whiteName };
 }
@@ -304,7 +317,7 @@ function buildProtocolEvents(data, redName, whiteName, target) {
             line.innerHTML =
                 "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
                 (g.assist1
-                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assист2 : "") + ")"
+                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
                     : "");
 
             descCell.appendChild(tag);

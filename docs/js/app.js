@@ -303,38 +303,29 @@ function buildProtocolEvents(data, redName, whiteName, target) {
         const descCell = document.createElement("div");
         descCell.className = "event-desc";
 
-if (ev.type === "goal") {
-    const g = ev.raw;
-    const teamName = g.team === "RED" ? redName :
-        g.team === "WHITE" ? whiteName : (g.team || "Команда");
+        if (ev.type === "goal") {
+            const g = ev.raw;
+            const teamName = g.team === "RED" ? redName :
+                g.team === "WHITE" ? whiteName : (g.team || "Команда");
 
-    const tag = document.createElement("span");
-    tag.className = "event-tag " +
-        (g.team === "RED" ? "goal-red" : "goal-white");
-    tag.textContent = "Гол";
+            const tag = document.createElement("span");
+            tag.className = "event-tag " +
+                (g.team === "RED" ? "goal-red" : "goal-white");
+            tag.textContent = "Гол";
 
-    const assists = [];
-    if (g.assist1 && g.assist1 !== "undefined") assists.push(g.assist1);
-    if (g.assist2 && g.assist2 !== "undefined") assists.push(g.assist2);
+            const line = document.createElement("span");
+            line.innerHTML =
+                "<strong>" + teamName + "</strong>: " + (g.scorer || "Неизвестный игрок") +
+                (g.assist1
+                    ? " (передачи: " + g.assist1 + (g.assist2 ? ", " + g.assist2 : "") + ")"
+                    : "");
 
-    const assistsText = assists.length > 0
-        ? " (передачи: " + assists.join(", ") + ")"
-        : "";
+            descCell.appendChild(tag);
+            descCell.appendChild(document.createTextNode(" "));
+            descCell.appendChild(line);
 
-    const line = document.createElement("span");
-    line.innerHTML =
-        "<strong>" + teamName + "</strong>: " +
-        (g.scorer || "Неизвестный игрок") +
-        assistsText;
-
-    descCell.appendChild(tag);
-    descCell.appendChild(document.createTextNode(" "));
-    descCell.appendChild(line);
-
-    scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
-    scoreCell.textContent = g.scoreAfter || "";
-}
-
+            scoreCell.className = "event-score " + (g.team === "RED" ? "red" : "white");
+            scoreCell.textContent = g.scoreAfter || "";
         } else if (ev.type === "roster") {
             const rc = ev.raw;
             const tag = document.createElement("span");

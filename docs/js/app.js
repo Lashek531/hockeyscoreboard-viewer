@@ -736,11 +736,13 @@ function renderLeaders(statsData, mode, container) {
         addTh("Голы");
         addTh("Передачи");
         addTh("Матчи");
+        addTh("Очки/матч");      // НОВОЕ: среднее количество очков за матч
     } else if (mode === PANEL_MODE.LEADERS_GOALS) {
         addTh("№");
         addTh("Игрок");
         addTh("Голы");
         addTh("Матчи");
+        addTh("Голы/матч");      // НОВОЕ: среднее количество голов за матч
     } else {
         // Количество побед: с ничьими и поражениями
         addTh("№");
@@ -766,17 +768,23 @@ function renderLeaders(statsData, mode, container) {
         }
 
         if (mode === PANEL_MODE.LEADERS_POINTS) {
+            const ptsPerGame = p.games > 0 ? (p.points / p.games).toFixed(2) : "—";
+
             addTd(index + 1);
             addTd(p.name || "Без имени");
             addTd(p.points);
             addTd(p.goals);
             addTd(p.assists);
             addTd(p.games);
+            addTd(ptsPerGame);   // НОВОЕ: вывод очков за матч
         } else if (mode === PANEL_MODE.LEADERS_GOALS) {
+            const goalsPerGame = p.games > 0 ? (p.goals / p.games).toFixed(2) : "—";
+
             addTd(index + 1);
             addTd(p.name || "Без имени");
             addTd(p.goals);
             addTd(p.games);
+            addTd(goalsPerGame); // НОВОЕ: вывод голов за матч
         } else {
             addTd(index + 1);
             addTd(p.name || "Без имени");
@@ -793,6 +801,7 @@ function renderLeaders(statsData, mode, container) {
     wrapper.appendChild(table);
     target.appendChild(wrapper);
 }
+
 
 async function showLeaders(mode) {
     const label =

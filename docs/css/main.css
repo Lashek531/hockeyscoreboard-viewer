@@ -218,21 +218,12 @@ body {
     letter-spacing: 0.16em;
     opacity: 0.75;
     margin-bottom: 8px;
+}
 .events-list {
-    max-height: 380px;   /* чуть больше для ноутбуков/планшетов */
+    max-height: 360px;
     overflow-y: auto;
     font-size: 14px;
 }
-    /* На больших экранах даём заметно больше высоты под голы */
-@media (min-width: 1024px) and (min-height: 700px) {
-    .events-list {
-        max-height: 520px;  /* влезает значительно больше голов */
-    }
-}
-
-
-    
-
 
 /* Обычный протокол матча (справа на экране) */
 .event-row {

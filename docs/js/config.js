@@ -6,7 +6,7 @@ const LOCAL_INDEX_URL = "./index.json";
 
 // Глобальный индекс на Raspberry Pi (корень /var/www/hockey-json/)
 const DRIVE_INDEX_URL =
-    "https://hockey.ch73210.keenetic.pro:8443/index.json";
+    "https://hockey-server.pestovo328.ru/index.json";
     //"https://test.pestovo328.ru/index.json";
 
 

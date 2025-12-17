@@ -803,6 +803,7 @@ function renderLeaders(statsData, mode, container) {
     target.appendChild(wrapper);
 }
 
+
 async function showLeaders(mode) {
     const label =
         mode === PANEL_MODE.LEADERS_POINTS ? "Загрузка лучших бомбардиров..." :
@@ -848,145 +849,6 @@ async function showLeaders(mode) {
             dom.stateMessage.classList.add("error");
             dom.stateMessage.textContent =
                 "Ошибка загрузки статистики игроков: " + e.message;
-        }
-    }
-}
-
-// ========== РЕЙТИНГИ ИГРОКОВ ==========
-
-function renderRatingsTable(ratingsData, playedNamesSet, container) {
-    const target = container || dom.modalContent || dom.eventsList;
-    if (!target) return;
-
-    const rawPlayers = Array.isArray(ratingsData.players) ? ratingsData.players.slice() : [];
-
-    const rows = rawPlayers
-        .map(p => {
-            const name = String(p.full_name || "").trim();
-            const base = Number(p.base_rating || 0);
-            const delta = Number(p.season_delta || 0);
-            return {
-                name,
-                base,
-                delta,
-                total: base + delta
-            };
-        })
-        .filter(p => p.name && playedNamesSet.has(p.name));
-
-    rows.sort((a, b) => {
-        if (b.total !== a.total) return b.total - a.total;
-        if (b.base !== a.base) return b.base - a.base;
-        if (b.delta !== a.delta) return b.delta - a.delta;
-        return a.name.localeCompare(b.name, "ru");
-    });
-
-    target.innerHTML = "";
-
-    if (rows.length === 0) {
-        target.textContent = "Нет данных по рейтингу игроков для текущего сезона.";
-        return;
-    }
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "leaders-table-wrapper";
-
-    const table = document.createElement("table");
-    table.className = "leaders-table";
-
-    const thead = document.createElement("thead");
-    const headRow = document.createElement("tr");
-
-    function addTh(text) {
-        const th = document.createElement("th");
-        th.textContent = text;
-        headRow.appendChild(th);
-    }
-
-    addTh("№");
-    addTh("Игрок");
-    addTh("Рейтинг");
-    addTh("База");
-    addTh("Сезон");
-
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    const tbody = document.createElement("tbody");
-
-    rows.forEach((p, index) => {
-        const tr = document.createElement("tr");
-
-        function addTd(text) {
-            const td = document.createElement("td");
-            td.textContent = text;
-            tr.appendChild(td);
-        }
-
-        addTd(index + 1);
-        addTd(p.name);
-        addTd(p.total);
-        addTd(p.base);
-        addTd(p.delta);
-
-        tbody.appendChild(tr);
-    });
-
-    table.appendChild(tbody);
-    wrapper.appendChild(table);
-    target.appendChild(wrapper);
-}
-
-async function showRatings() {
-    try {
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("error");
-            dom.stateMessage.classList.add("loading");
-            dom.stateMessage.textContent = "Загрузка рейтинга игроков...";
-        }
-
-        const indexData = await ensureGlobalIndex();
-        const season = getCurrentSeasonEntry(indexData);
-        if (!season || !season.playersStats) {
-            throw new Error("Для текущего сезона не указан playersStats.");
-        }
-
-        const [statsData, ratingsData] = await Promise.all([
-            fetchJson(season.playersStats),
-            fetchJson("base_roster/ratings.json")
-        ]);
-
-        // Играл в сезоне = wins + losses + draws > 0
-        const played = new Set();
-        const players = Array.isArray(statsData.players) ? statsData.players : [];
-        players.forEach(p => {
-            const wins = Number(p.wins || 0);
-            const draws = Number(p.draws || 0);
-            const losses = Number(p.losses || 0);
-            if (wins + draws + losses > 0) {
-                const name = String(p.name || "").trim();
-                if (name) played.add(name);
-            }
-        });
-
-        if (dom.modalContent) {
-            dom.modalContent.innerHTML = "";
-            renderRatingsTable(ratingsData, played, dom.modalContent);
-        }
-
-        openModal("Рейтинг игроков");
-
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("loading");
-            dom.stateMessage.textContent = "";
-        }
-    } catch (e) {
-        console.error(e);
-        if (dom.stateMessage) {
-            dom.stateMessage.classList.remove("loading");
-            dom.stateMessage.classList.add("error");
-            dom.stateMessage.textContent =
-                "Ошибка загрузки рейтинга игроков: " + e.message;
         }
     }
 }
@@ -1055,12 +917,11 @@ if (dom.menuWins) {
     dom.menuWins.addEventListener("click", () => {
         showLeaders(PANEL_MODE.LEADERS_WINS);
     });
-}
 
 if (dom.menuRatings) {
     dom.menuRatings.addEventListener("click", () => {
         showRatings();
-    });
+    });    
 }
 
 // ========== СТАРТ АВТООБНОВЛЕНИЯ ==========

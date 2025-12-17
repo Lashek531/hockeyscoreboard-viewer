@@ -28,6 +28,7 @@ const dom = {
     menuBombardiers: document.getElementById("menuBombardiers"),
     menuSnipers: document.getElementById("menuSnipers"),
     menuWins: document.getElementById("menuWins"),
+    menuRatings: document.getElementById("menuRatings"),
 
     // модалка
     modalBackdrop: document.getElementById("modalBackdrop"),
@@ -660,7 +661,8 @@ async function showFinishedGames() {
 const PANEL_MODE = {
     LEADERS_POINTS: "leaders_points",
     LEADERS_GOALS: "leaders_goals",
-    LEADERS_WINS: "leaders_wins"
+    LEADERS_WINS: "leaders_wins",
+    LEADERS_RATINGS: "leaders_ratings"
 };
 
 function renderLeaders(statsData, mode, container) {
@@ -802,6 +804,153 @@ function renderLeaders(statsData, mode, container) {
     target.appendChild(wrapper);
 }
 
+function renderRatingsTable(rows, container) {
+    const target = container || dom.modalContent;
+    if (!target) return;
+
+    target.innerHTML = "";
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+        target.textContent = "Рейтинг игроков пока недоступен.";
+        return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "leaders-table-wrapper";
+
+    const table = document.createElement("table");
+    table.className = "leaders-table";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    function addTh(text) {
+        const th = document.createElement("th");
+        th.textContent = text;
+        headRow.appendChild(th);
+    }
+
+    addTh("№");
+    addTh("Игрок");
+    addTh("Рейтинг");
+    addTh("База");
+    addTh("Сезон");
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+
+    rows.forEach((r, index) => {
+        const tr = document.createElement("tr");
+
+        function addTd(text) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+        }
+
+        addTd(index + 1);
+        addTd(r.name);
+        addTd(r.total);
+        addTd(r.base);
+        addTd(r.delta);
+
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    target.appendChild(wrapper);
+}
+
+async function showRatings() {
+    try {
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("error");
+            dom.stateMessage.classList.add("loading");
+            dom.stateMessage.textContent = "Загрузка рейтинга игроков...";
+        }
+
+        const indexData = await ensureGlobalIndex();
+        const season = getCurrentSeasonEntry(indexData);
+        if (!season || !season.playersStats) {
+            throw new Error("Для текущего сезона не указан playersStats.");
+        }
+
+        // 1) Кто играл в сезоне (по статистике)
+        const statsData = await fetchJson(season.playersStats);
+        const statsPlayers = Array.isArray(statsData.players) ? statsData.players : [];
+
+        const playedNames = new Set();
+        statsPlayers.forEach(p => {
+            const name = (p && p.name) ? String(p.name) : "";
+            if (!name) return;
+
+            const wins = Number(p.wins || 0);
+            const draws = Number(p.draws || 0);
+            const losses = Number(p.losses || 0);
+
+            const gamesPlayed = wins + draws + losses;
+            if (gamesPlayed > 0) {
+                playedNames.add(name);
+            }
+        });
+
+        // 2) Рейтинги из base_roster/ratings.json (путь фиксированный)
+        const ratingsData = await fetchJson("base_roster/ratings.json");
+        const ratingPlayers = Array.isArray(ratingsData.players) ? ratingsData.players : [];
+
+        // Собираем карту рейтингов по full_name
+        const ratingByName = new Map();
+        ratingPlayers.forEach(rp => {
+            const name = (rp && rp.full_name) ? String(rp.full_name) : "";
+            if (!name) return;
+
+            const base = Number(rp.base_rating || 0);
+            const delta = Number(rp.season_delta || 0);
+            const total = base + delta;
+
+            ratingByName.set(name, { name, base, delta, total });
+        });
+
+        // 3) Итоговый список: только те, кто играл в сезоне
+        const rows = [];
+        for (const name of playedNames) {
+            const r = ratingByName.get(name);
+            if (!r) continue; // если нет в рейтингах — просто не показываем
+            rows.push(r);
+        }
+
+        // 4) Сортировка: total desc -> base desc -> delta desc -> name
+        rows.sort((a, b) =>
+            (b.total - a.total) ||
+            (b.base - a.base) ||
+            (b.delta - a.delta) ||
+            a.name.localeCompare(b.name, "ru")
+        );
+
+        if (dom.modalContent) {
+            dom.modalContent.innerHTML = "";
+            renderRatingsTable(rows, dom.modalContent);
+        }
+
+        openModal("Рейтинг игроков");
+
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.textContent = "";
+        }
+    } catch (e) {
+        console.error(e);
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.remove("loading");
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent =
+                "Ошибка загрузки рейтинга игроков: " + e.message;
+        }
+    }
+}
 
 async function showLeaders(mode) {
     const label =
@@ -915,6 +1064,12 @@ if (dom.menuSnipers) {
 if (dom.menuWins) {
     dom.menuWins.addEventListener("click", () => {
         showLeaders(PANEL_MODE.LEADERS_WINS);
+    });
+}
+
+if (dom.menuRatings) {
+    dom.menuRatings.addEventListener("click", () => {
+        showRatings();
     });
 }
 

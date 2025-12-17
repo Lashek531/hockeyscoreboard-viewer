@@ -28,7 +28,6 @@ const dom = {
     menuBombardiers: document.getElementById("menuBombardiers"),
     menuSnipers: document.getElementById("menuSnipers"),
     menuWins: document.getElementById("menuWins"),
-    menuRatings: document.getElementById("menuRatings"),
 
     // модалка
     modalBackdrop: document.getElementById("modalBackdrop"),
@@ -917,11 +916,6 @@ if (dom.menuWins) {
     dom.menuWins.addEventListener("click", () => {
         showLeaders(PANEL_MODE.LEADERS_WINS);
     });
-
-if (dom.menuRatings) {
-    dom.menuRatings.addEventListener("click", () => {
-        showRatings();
-    });    
 }
 
 // ========== СТАРТ АВТООБНОВЛЕНИЯ ==========

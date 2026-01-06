@@ -804,14 +804,21 @@ function renderLeaders(statsData, mode, container) {
     target.appendChild(wrapper);
 }
 
-function renderRatingsTable(rows, container) {
+function renderRatingsTable(rows, container, options) {
     const target = container || dom.modalContent;
     if (!target) return;
 
-    target.innerHTML = "";
+    const opts = options || {};
+    const append = !!opts.append;
+
+    if (!append) {
+        target.innerHTML = "";
+    }
 
     if (!Array.isArray(rows) || rows.length === 0) {
-        target.textContent = "Рейтинг игроков пока недоступен.";
+        if (!append) {
+            target.textContent = "Рейтинг игроков пока недоступен.";
+        }
         return;
     }
 
@@ -864,6 +871,7 @@ function renderRatingsTable(rows, container) {
     target.appendChild(wrapper);
 }
 
+
 async function showRatings() {
     try {
         if (dom.stateMessage) {
@@ -880,18 +888,14 @@ async function showRatings() {
 
         // 1) Кто играл в сезоне (по статистике)
         const statsData = await fetchJson(season.playersStats);
-        const statsPlayers = Array.isArray(statsData.players) ? statsData.players : [];
+        const playersStats = Array.isArray(statsData.players) ? statsData.players : [];
 
         const playedNames = new Set();
-        statsPlayers.forEach(p => {
-            const name = (p && p.name) ? String(p.name) : "";
+        playersStats.forEach(ps => {
+            const name = (ps && ps.name) ? String(ps.name) : "";
             if (!name) return;
 
-            const wins = Number(p.wins || 0);
-            const draws = Number(p.draws || 0);
-            const losses = Number(p.losses || 0);
-
-            const gamesPlayed = wins + draws + losses;
+            const gamesPlayed = Number(ps.games || 0);
             if (gamesPlayed > 0) {
                 playedNames.add(name);
             }
@@ -911,7 +915,11 @@ async function showRatings() {
             const delta = Number(rp.season_delta || 0);
             const total = base + delta;
 
-            ratingByName.set(name, { name, base, delta, total });
+            // user_id нужен для разделения на домашних/гостевых
+            const user_id =
+                (rp && rp.user_id !== undefined && rp.user_id !== null) ? Number(rp.user_id) : null;
+
+            ratingByName.set(name, { name, base, delta, total, user_id });
         });
 
         // 3) Итоговый список: только те, кто играл в сезоне
@@ -930,9 +938,27 @@ async function showRatings() {
             a.name.localeCompare(b.name, "ru")
         );
 
+        // 5) Разделение по user_id: >= 0 домашние, < 0 гостевые
+        const homeRows = rows.filter(r => (r.user_id ?? 0) >= 0);
+        const guestRows = rows.filter(r => (r.user_id ?? 0) < 0);
+
         if (dom.modalContent) {
             dom.modalContent.innerHTML = "";
-            renderRatingsTable(rows, dom.modalContent);
+
+            // Домашние игроки — первый блок
+            renderRatingsTable(homeRows, dom.modalContent);
+
+            // Гостевые игроки — второй блок в том же скролле
+            if (guestRows.length > 0) {
+                const h = document.createElement("div");
+                h.textContent = "Гостевые игроки";
+                h.style.margin = "12px 0 6px";
+                h.style.fontWeight = "700";
+                dom.modalContent.appendChild(h);
+
+                // append=true, чтобы не стереть первый блок
+                renderRatingsTable(guestRows, dom.modalContent, { append: true });
+            }
         }
 
         openModal("Рейтинг игроков");
@@ -951,6 +977,7 @@ async function showRatings() {
         }
     }
 }
+
 
 async function showLeaders(mode) {
     const label =

@@ -696,14 +696,14 @@ function renderLeaders(statsData, mode, container) {
     } else {
         // Лидеры по победам:
         // 1) больше побед
-        // 2) больше ничьих
-        // 3) меньше поражений
+        // 2) меньше поражений  (важно: при равенстве побед выше тот, у кого меньше losses)
+        // 3) больше ничьих
         // 4) больше матчей
         // 5) имя
         players.sort((a, b) =>
             b.wins - a.wins ||
-            b.draws - a.draws ||
             a.losses - b.losses ||
+            b.draws - a.draws ||
             b.games - a.games ||
             a.name.localeCompare(b.name, "ru")
         );

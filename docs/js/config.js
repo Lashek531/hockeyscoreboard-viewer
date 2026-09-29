@@ -17,7 +17,10 @@ const USE_DRIVE = true;
 const GLOBAL_INDEX_URL = USE_DRIVE ? DRIVE_INDEX_URL : LOCAL_INDEX_URL;
 
 // Версия интерфейса
-const UI_VERSION = "UI v0.20 (seasons & stats)";
+const UI_VERSION = "UI v0.21 (season splash)";
+
+// Временная сезонная заставка. false возвращает обычное табло.
+const SEASON_SPLASH_ENABLED = true;
 
 // Интервал автообновления активной игры (только для протокола текущего матча)
 const REFRESH_INTERVAL_MS = 5000;

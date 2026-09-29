@@ -5,11 +5,233 @@
 * {
     box-sizing: border-box;
 }
+[hidden] {
+    display: none !important;
+}
 body {
     margin: 0;
     padding: 16px;
     background: #050814;
     color: #f5f5f5;
+}
+
+/* Временная заставка сезона 2026/27 */
+body.season-splash-active {
+    padding: 0;
+    overflow: hidden;
+}
+
+.season-splash {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+    padding: clamp(28px, 6vw, 80px) 20px;
+    background:
+        linear-gradient(135deg, rgba(3, 8, 24, 0.98), rgba(8, 24, 46, 0.94)),
+        radial-gradient(circle at 50% 20%, #164e75 0, #050814 58%);
+}
+
+.season-splash::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    opacity: 0.26;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.splash-glow {
+    position: absolute;
+    z-index: -2;
+    width: min(60vw, 760px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.24;
+}
+
+.splash-glow-red {
+    left: -28vw;
+    bottom: -42vw;
+    background: #ef4444;
+}
+
+.splash-glow-blue {
+    right: -28vw;
+    top: -42vw;
+    background: #38bdf8;
+}
+
+.splash-rink {
+    position: absolute;
+    z-index: -1;
+    width: min(88vw, 1100px);
+    height: min(62vh, 640px);
+    border: 2px solid rgba(224, 242, 254, 0.18);
+    border-radius: min(14vw, 150px);
+    transform: perspective(900px) rotateX(60deg) translateY(22%);
+    box-shadow:
+        inset 0 0 70px rgba(125, 211, 252, 0.06),
+        0 0 70px rgba(14, 165, 233, 0.08);
+}
+
+.rink-center-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    transform: translateX(-50%);
+    background: rgba(248, 113, 113, 0.18);
+}
+
+.rink-center-circle,
+.rink-faceoff {
+    position: absolute;
+    top: 50%;
+    width: min(18vw, 180px);
+    aspect-ratio: 1;
+    border: 2px solid rgba(248, 113, 113, 0.16);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.rink-center-circle { left: 50%; }
+.rink-faceoff-left { left: 22%; }
+.rink-faceoff-right { left: 78%; }
+
+.splash-content {
+    width: min(880px, 100%);
+    text-align: center;
+    animation: splash-rise 0.8s ease-out both;
+}
+
+.splash-kicker {
+    margin-bottom: 20px;
+    color: #7dd3fc;
+    font-size: clamp(12px, 1.7vw, 16px);
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+}
+
+.splash-content h1 {
+    margin: 0;
+    font-size: clamp(56px, 11vw, 132px);
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    text-transform: uppercase;
+    text-shadow:
+        0 0 36px rgba(56, 189, 248, 0.3),
+        0 12px 50px rgba(0, 0, 0, 0.65);
+}
+
+.splash-season {
+    margin-top: clamp(24px, 4vw, 42px);
+    font-size: clamp(22px, 4vw, 44px);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.splash-season strong {
+    display: inline-block;
+    color: #fca5a5;
+    font-weight: 800;
+    text-shadow: 0 0 22px rgba(239, 68, 68, 0.3);
+}
+
+.splash-copy {
+    max-width: 720px;
+    margin: 24px auto 0;
+    color: #cbd5e1;
+    font-size: clamp(16px, 2.2vw, 22px);
+    line-height: 1.55;
+}
+
+.splash-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: clamp(32px, 5vw, 54px);
+    padding: 10px 18px;
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    border-radius: 999px;
+    background: rgba(8, 47, 73, 0.44);
+    color: #e0f2fe;
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    backdrop-filter: blur(12px);
+}
+
+.splash-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 14px #38bdf8;
+    animation: splash-pulse 1.8s ease-in-out infinite;
+}
+
+.splash-puck {
+    position: absolute;
+    right: clamp(24px, 9vw, 150px);
+    bottom: clamp(28px, 8vh, 100px);
+    width: clamp(54px, 7vw, 92px);
+    height: clamp(20px, 2.7vw, 34px);
+    border-radius: 50%;
+    transform: rotate(-10deg);
+    background: linear-gradient(180deg, #334155 0, #030712 45%, #000 100%);
+    box-shadow:
+        0 18px 22px rgba(0, 0, 0, 0.55),
+        inset 0 2px 4px rgba(255, 255, 255, 0.14);
+    animation: puck-drift 4.8s ease-in-out infinite;
+}
+
+@keyframes splash-rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splash-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes puck-drift {
+    0%, 100% { transform: translateX(0) rotate(-10deg); }
+    50% { transform: translateX(-18px) rotate(-6deg); }
+}
+
+@media (max-width: 620px) {
+    .season-splash {
+        padding-inline: 18px;
+    }
+
+    .splash-copy {
+        max-width: 34rem;
+    }
+
+    .splash-puck {
+        opacity: 0.65;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .splash-content,
+    .splash-status-dot,
+    .splash-puck {
+        animation: none;
+    }
 }
 .page {
     max-width: 1200px;

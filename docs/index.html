@@ -2,12 +2,40 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Hockey Scoreboard Viewer</title>
+    <title>Пестово Арена — сезон 2026/27</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/main.css">
 </head>
 
 <body>
+    <main class="season-splash" id="seasonSplash" hidden aria-labelledby="seasonSplashTitle">
+        <div class="splash-glow splash-glow-red" aria-hidden="true"></div>
+        <div class="splash-glow splash-glow-blue" aria-hidden="true"></div>
+
+        <div class="splash-rink" aria-hidden="true">
+            <div class="rink-center-line"></div>
+            <div class="rink-center-circle"></div>
+            <div class="rink-faceoff rink-faceoff-left"></div>
+            <div class="rink-faceoff rink-faceoff-right"></div>
+        </div>
+
+        <div class="splash-content">
+            <div class="splash-kicker">Пестово Арена</div>
+            <h1 id="seasonSplashTitle">Лёд зовёт!</h1>
+            <div class="splash-season">Скоро открытие сезона <strong>2026/27</strong></div>
+            <p class="splash-copy">
+                Готовим команды, обновляем статистику и настраиваем табло.
+                Новый сезон — новые скорости, новые голы, новая история!
+            </p>
+            <div class="splash-status">
+                <span class="splash-status-dot" aria-hidden="true"></span>
+                Готовимся к старту
+            </div>
+        </div>
+
+        <div class="splash-puck" aria-hidden="true"></div>
+    </main>
+
     <!-- Модальное окно для списков и протоколов -->
     <div class="modal-backdrop" id="modalBackdrop">
         <div class="modal-window">
@@ -19,7 +47,7 @@
         </div>
     </div>
 
-    <div class="page">
+    <div class="page" id="scoreboardPage">
         <div class="top-bar">
             <div>
                 <div class="arena" id="arenaName">Хоккейное табло</div>

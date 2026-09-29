@@ -1100,13 +1100,26 @@ if (dom.menuRatings) {
     });
 }
 
-// ========== СТАРТ АВТООБНОВЛЕНИЯ ==========
+// ========== СТАРТ ЭКРАНА ==========
 
-loadAndRenderActiveGame();
+const seasonSplashEnabled =
+    typeof SEASON_SPLASH_ENABLED !== "undefined" && SEASON_SPLASH_ENABLED;
+const seasonSplash = document.getElementById("seasonSplash");
+const scoreboardPage = document.getElementById("scoreboardPage");
 
-setInterval(() => {
+if (seasonSplashEnabled) {
+    document.body.classList.add("season-splash-active");
+    if (seasonSplash) seasonSplash.hidden = false;
+    if (scoreboardPage) scoreboardPage.hidden = true;
+} else {
+    if (seasonSplash) seasonSplash.hidden = true;
+    if (scoreboardPage) scoreboardPage.hidden = false;
+
     loadAndRenderActiveGame();
-}, REFRESH_INTERVAL_MS);
+    setInterval(() => {
+        loadAndRenderActiveGame();
+    }, REFRESH_INTERVAL_MS);
+}
 
 // ========== ПОЛНОЭКРАННЫЙ РЕЖИМ ==========
 

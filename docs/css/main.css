@@ -355,6 +355,12 @@ body.season-splash-active {
     background: rgba(30, 64, 175, 0.9);
     border-color: rgba(191, 219, 254, 0.9);
 }
+.menu-item-archive {
+    border-color: rgba(125, 211, 252, 0.7);
+}
+.menu-item-all-time {
+    border-color: rgba(248, 113, 113, 0.72);
+}
 .menu-spacer {
     flex: 1 1 auto;
 }
@@ -373,6 +379,55 @@ body.season-splash-active {
 .fs-btn:hover {
     background: rgba(15,118,110,0.9);
     border-color: rgba(167,243,208,0.9);
+}
+
+/* Архив сезонов */
+.archive-season-card {
+    padding: 14px;
+    border: 1px solid rgba(125, 211, 252, 0.28);
+    border-radius: 14px;
+    background: rgba(15, 23, 42, 0.72);
+}
+
+.archive-season-card + .archive-season-card {
+    margin-top: 12px;
+}
+
+.archive-season-card h3 {
+    margin: 0 0 12px;
+    color: #e0f2fe;
+    font-size: 18px;
+}
+
+.archive-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.archive-action {
+    padding: 7px 12px;
+    border: 1px solid rgba(148, 163, 184, 0.58);
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.92);
+    color: #e2e8f0;
+    cursor: pointer;
+}
+
+.archive-action:hover {
+    border-color: #7dd3fc;
+    background: rgba(3, 105, 161, 0.68);
+}
+
+.all-time-table th,
+.all-time-table td {
+    min-width: 78px;
+}
+
+.all-time-table th:nth-child(2),
+.all-time-table td:nth-child(2) {
+    min-width: 220px;
+    text-align: left;
 }
 
 .state {

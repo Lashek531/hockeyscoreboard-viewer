@@ -29,6 +29,8 @@ const dom = {
     menuSnipers: document.getElementById("menuSnipers"),
     menuWins: document.getElementById("menuWins"),
     menuRatings: document.getElementById("menuRatings"),
+    menuArchive: document.getElementById("menuArchive"),
+    menuAllTime: document.getElementById("menuAllTime"),
 
     // модалка
     modalBackdrop: document.getElementById("modalBackdrop"),
@@ -102,11 +104,21 @@ function getCurrentSeasonEntry(indexData) {
     if (seasons.length === 0) return null;
 
     const currentId = indexData.currentSeason;
-    let season = seasons.find(s => s.id === currentId);
+    let season = getSeasonEntry(indexData, currentId);
     if (!season) {
         season = seasons[0];
     }
     return season;
+}
+
+function getSeasonEntry(indexData, seasonId) {
+    const seasons = Array.isArray(indexData.seasons) ? indexData.seasons : [];
+    return seasons.find(season => season.id === seasonId) || null;
+}
+
+function seasonLabel(season) {
+    if (!season) return "";
+    return season.name || (season.id ? "Сезон " + season.id : "Сезон");
 }
 
 // ========== ФОРМАТЫ ДАТ ==========
@@ -616,7 +628,7 @@ async function showFinishedGameProtocol(gameEntry) {
     }
 }
 
-async function showFinishedGames() {
+async function showFinishedGames(seasonOverride) {
     try {
         if (dom.stateMessage) {
             dom.stateMessage.classList.remove("error");
@@ -625,7 +637,7 @@ async function showFinishedGames() {
         }
 
         const indexData = await ensureGlobalIndex();
-        const season = getCurrentSeasonEntry(indexData);
+        const season = seasonOverride || getCurrentSeasonEntry(indexData);
         if (!season || !season.finishedIndex) {
             throw new Error("Для текущего сезона не указан finishedIndex.");
         }
@@ -639,7 +651,7 @@ async function showFinishedGames() {
             });
         }
 
-        openModal("Завершённые игры");
+        openModal("Завершённые игры — " + seasonLabel(season));
 
         if (dom.stateMessage) {
             dom.stateMessage.classList.remove("loading");
@@ -872,7 +884,7 @@ function renderRatingsTable(rows, container, options) {
 }
 
 
-async function showRatings() {
+async function showRatings(seasonOverride) {
     try {
         if (dom.stateMessage) {
             dom.stateMessage.classList.remove("error");
@@ -881,7 +893,7 @@ async function showRatings() {
         }
 
         const indexData = await ensureGlobalIndex();
-        const season = getCurrentSeasonEntry(indexData);
+        const season = seasonOverride || getCurrentSeasonEntry(indexData);
         if (!season || !season.playersStats) {
             throw new Error("Для текущего сезона не указан playersStats.");
         }
@@ -901,8 +913,14 @@ async function showRatings() {
             }
         });
 
-        // 2) Рейтинги из base_roster/ratings.json (путь фиксированный)
-        const ratingsData = await fetchJson("base_roster/ratings.json");
+        const ratingsPath = season.ratings ||
+            (season.id === indexData.currentSeason ? "base_roster/ratings.json" : "");
+        if (!ratingsPath) {
+            throw new Error("Для выбранного сезона не сохранён рейтинг игроков.");
+        }
+
+        // 2) Текущий рейтинг или финальный снимок рейтинга архивного сезона
+        const ratingsData = await fetchJson(ratingsPath);
         const ratingPlayers = Array.isArray(ratingsData.players) ? ratingsData.players : [];
 
         // Собираем карту рейтингов по full_name
@@ -961,7 +979,7 @@ async function showRatings() {
             }
         }
 
-        openModal("Рейтинг игроков");
+        openModal("Рейтинг игроков — " + seasonLabel(season));
 
         if (dom.stateMessage) {
             dom.stateMessage.classList.remove("loading");
@@ -979,7 +997,7 @@ async function showRatings() {
 }
 
 
-async function showLeaders(mode) {
+async function showLeaders(mode, seasonOverride) {
     const label =
         mode === PANEL_MODE.LEADERS_POINTS ? "Загрузка лучших бомбардиров..." :
         mode === PANEL_MODE.LEADERS_GOALS ? "Загрузка лучших снайперов..." :
@@ -993,7 +1011,7 @@ async function showLeaders(mode) {
         }
 
         const indexData = await ensureGlobalIndex();
-        const season = getCurrentSeasonEntry(indexData);
+        const season = seasonOverride || getCurrentSeasonEntry(indexData);
         if (!season || !season.playersStats) {
             throw new Error("Для текущего сезона не указан playersStats.");
         }
@@ -1006,11 +1024,11 @@ async function showLeaders(mode) {
         }
 
         if (mode === PANEL_MODE.LEADERS_POINTS) {
-            openModal("Бомбардиры");
+            openModal("Бомбардиры — " + seasonLabel(season));
         } else if (mode === PANEL_MODE.LEADERS_GOALS) {
-            openModal("Снайперы");
+            openModal("Снайперы — " + seasonLabel(season));
         } else {
-            openModal("Победы");
+            openModal("Победы — " + seasonLabel(season));
         }
 
         if (dom.stateMessage) {
@@ -1024,6 +1042,156 @@ async function showLeaders(mode) {
             dom.stateMessage.classList.add("error");
             dom.stateMessage.textContent =
                 "Ошибка загрузки статистики игроков: " + e.message;
+        }
+    }
+}
+
+// ========== АРХИВ СЕЗОНОВ И СТАТИСТИКА ЗА ВСЁ ВРЕМЯ ==========
+
+function createArchiveAction(label, action) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "archive-action";
+    button.textContent = label;
+    button.addEventListener("click", action);
+    return button;
+}
+
+async function showSeasonArchive() {
+    try {
+        const indexData = await ensureGlobalIndex();
+        const seasons = (Array.isArray(indexData.seasons) ? indexData.seasons : [])
+            .filter(season => season.id !== indexData.currentSeason)
+            .sort((a, b) => String(b.id).localeCompare(String(a.id), "ru"));
+
+        if (!dom.modalContent) return;
+        dom.modalContent.innerHTML = "";
+
+        if (seasons.length === 0) {
+            dom.modalContent.textContent = "Архивных сезонов пока нет.";
+        }
+
+        seasons.forEach(season => {
+            const card = document.createElement("section");
+            card.className = "archive-season-card";
+
+            const title = document.createElement("h3");
+            title.textContent = seasonLabel(season);
+            card.appendChild(title);
+
+            const actions = document.createElement("div");
+            actions.className = "archive-actions";
+            actions.appendChild(createArchiveAction("Матчи", () => showFinishedGames(season)));
+            actions.appendChild(createArchiveAction(
+                "Бомбардиры",
+                () => showLeaders(PANEL_MODE.LEADERS_POINTS, season)
+            ));
+            actions.appendChild(createArchiveAction(
+                "Снайперы",
+                () => showLeaders(PANEL_MODE.LEADERS_GOALS, season)
+            ));
+            actions.appendChild(createArchiveAction(
+                "Победы",
+                () => showLeaders(PANEL_MODE.LEADERS_WINS, season)
+            ));
+            if (season.ratings) {
+                actions.appendChild(createArchiveAction("Рейтинг", () => showRatings(season)));
+            }
+
+            card.appendChild(actions);
+            dom.modalContent.appendChild(card);
+        });
+
+        openModal("Архив сезонов");
+    } catch (error) {
+        console.error(error);
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent = "Ошибка загрузки архива: " + error.message;
+        }
+    }
+}
+
+function renderAllTimeStats(statsData, container) {
+    const players = Array.isArray(statsData.players) ? statsData.players.slice() : [];
+    players.forEach(player => {
+        player.games = Number(player.games || 0);
+        player.goals = Number(player.goals || 0);
+        player.assists = Number(player.assists || 0);
+        player.points = Number(player.points || (player.goals + player.assists));
+        player.wins = Number(player.wins || 0);
+        player.draws = Number(player.draws || 0);
+        player.losses = Number(player.losses || 0);
+    });
+    players.sort((a, b) =>
+        b.points - a.points ||
+        b.goals - a.goals ||
+        a.name.localeCompare(b.name, "ru")
+    );
+
+    container.innerHTML = "";
+    if (players.length === 0) {
+        container.textContent = "Общая статистика пока недоступна.";
+        return;
+    }
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "leaders-table-wrapper";
+    const table = document.createElement("table");
+    table.className = "leaders-table all-time-table";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    ["№", "Игрок", "Матчи", "Голы", "Передачи", "Очки", "Победы", "Ничьи", "Поражения"]
+        .forEach(label => {
+            const th = document.createElement("th");
+            th.textContent = label;
+            headRow.appendChild(th);
+        });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    players.forEach((player, index) => {
+        const row = document.createElement("tr");
+        [
+            index + 1,
+            player.name || "Без имени",
+            player.games,
+            player.goals,
+            player.assists,
+            player.points,
+            player.wins,
+            player.draws,
+            player.losses,
+        ].forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+}
+
+async function showAllTimeStats() {
+    try {
+        const indexData = await ensureGlobalIndex();
+        if (!indexData.allTimeStats) {
+            throw new Error("В индексе не указан файл общей статистики.");
+        }
+        const statsData = await fetchJson(indexData.allTimeStats);
+        if (dom.modalContent) {
+            renderAllTimeStats(statsData, dom.modalContent);
+        }
+        openModal("Статистика за всё время");
+    } catch (error) {
+        console.error(error);
+        if (dom.stateMessage) {
+            dom.stateMessage.classList.add("error");
+            dom.stateMessage.textContent = "Ошибка загрузки общей статистики: " + error.message;
         }
     }
 }
@@ -1097,6 +1265,18 @@ if (dom.menuWins) {
 if (dom.menuRatings) {
     dom.menuRatings.addEventListener("click", () => {
         showRatings();
+    });
+}
+
+if (dom.menuArchive) {
+    dom.menuArchive.addEventListener("click", () => {
+        showSeasonArchive();
+    });
+}
+
+if (dom.menuAllTime) {
+    dom.menuAllTime.addEventListener("click", () => {
+        showAllTimeStats();
     });
 }
 

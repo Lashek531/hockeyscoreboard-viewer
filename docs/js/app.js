@@ -1227,6 +1227,19 @@ async function loadAndRenderActiveGame() {
         firstActiveLoad = false;
     } catch (e) {
         console.error(e);
+        if (scoreboardPreviewEnabled && /HTTP 404\b/.test(e.message)) {
+            if (dom.stateMessage) {
+                dom.stateMessage.classList.remove("error", "loading");
+                dom.stateMessage.textContent = "Активный матч пока не создан";
+            }
+            if (dom.gameStatus) {
+                dom.gameStatus.classList.remove("status-finished", "status-live");
+                dom.gameStatus.classList.add("status-scheduled");
+                dom.gameStatus.textContent = "Матч не начат";
+            }
+            firstActiveLoad = false;
+            return;
+        }
         if (dom.stateMessage) {
             dom.stateMessage.classList.remove("loading");
             dom.stateMessage.classList.add("error");
@@ -1282,8 +1295,12 @@ if (dom.menuAllTime) {
 
 // ========== СТАРТ ЭКРАНА ==========
 
+const scoreboardPreviewEnabled =
+    new URLSearchParams(window.location.search).get("preview") === "scoreboard";
 const seasonSplashEnabled =
-    typeof SEASON_SPLASH_ENABLED !== "undefined" && SEASON_SPLASH_ENABLED;
+    typeof SEASON_SPLASH_ENABLED !== "undefined" &&
+    SEASON_SPLASH_ENABLED &&
+    !scoreboardPreviewEnabled;
 const seasonSplash = document.getElementById("seasonSplash");
 const scoreboardPage = document.getElementById("scoreboardPage");
 

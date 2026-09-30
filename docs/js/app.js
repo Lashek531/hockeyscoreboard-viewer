@@ -383,20 +383,67 @@ function renderProtocol(data, redName, whiteName) {
 
 // ========== МОДАЛЬНЫЕ ОКНА ==========
 
+const modalHistory = [];
+
+function updateModalButton() {
+    if (!dom.modalOkButton) return;
+    dom.modalOkButton.textContent = modalHistory.length > 0 ? "Назад" : "ОК";
+}
+
+function prepareModalView() {
+    if (!dom.modalBackdrop || !dom.modalContent) return;
+
+    if (!dom.modalBackdrop.classList.contains("visible")) {
+        modalHistory.length = 0;
+        return;
+    }
+
+    const scrollTop = dom.modalContent.scrollTop;
+    const content = document.createDocumentFragment();
+    while (dom.modalContent.firstChild) {
+        content.appendChild(dom.modalContent.firstChild);
+    }
+
+    modalHistory.push({
+        title: dom.modalTitle ? dom.modalTitle.textContent : "",
+        content,
+        scrollTop,
+    });
+}
+
 function openModal(title) {
     if (!dom.modalBackdrop) return;
     if (dom.modalTitle) {
         dom.modalTitle.textContent = title || "";
     }
     dom.modalBackdrop.classList.add("visible");
+    if (dom.modalContent) {
+        dom.modalContent.scrollTop = 0;
+    }
+    updateModalButton();
 }
 
 function closeModal() {
     if (!dom.modalBackdrop) return;
+
+    if (modalHistory.length > 0 && dom.modalContent) {
+        const previous = modalHistory.pop();
+        dom.modalContent.innerHTML = "";
+        dom.modalContent.appendChild(previous.content);
+        if (dom.modalTitle) {
+            dom.modalTitle.textContent = previous.title;
+        }
+        dom.modalContent.scrollTop = previous.scrollTop;
+        updateModalButton();
+        return;
+    }
+
     dom.modalBackdrop.classList.remove("visible");
     if (dom.modalContent) {
         dom.modalContent.innerHTML = "";
     }
+    modalHistory.length = 0;
+    updateModalButton();
 }
 
 if (dom.modalOkButton) {
@@ -517,6 +564,7 @@ async function showFinishedGameProtocol(gameEntry) {
         const container = dom.modalContent;
         if (!container) return;
 
+        prepareModalView();
         container.innerHTML = "";
 
         // верхний блок: дата + арена
@@ -645,6 +693,7 @@ async function showFinishedGames(seasonOverride) {
         const finishedData = await fetchJson(season.finishedIndex);
 
         if (dom.modalContent) {
+            prepareModalView();
             dom.modalContent.innerHTML = "";
             renderFinishedList(finishedData, dom.modalContent, (game) => {
                 showFinishedGameProtocol(game);
@@ -961,6 +1010,7 @@ async function showRatings(seasonOverride) {
         const guestRows = rows.filter(r => (r.user_id ?? 0) < 0);
 
         if (dom.modalContent) {
+            prepareModalView();
             dom.modalContent.innerHTML = "";
 
             // Домашние игроки — первый блок
@@ -1019,6 +1069,7 @@ async function showLeaders(mode, seasonOverride) {
         const statsData = await fetchJson(season.playersStats);
 
         if (dom.modalContent) {
+            prepareModalView();
             dom.modalContent.innerHTML = "";
             renderLeaders(statsData, mode, dom.modalContent);
         }
@@ -1065,6 +1116,7 @@ async function showSeasonArchive() {
             .sort((a, b) => String(b.id).localeCompare(String(a.id), "ru"));
 
         if (!dom.modalContent) return;
+        prepareModalView();
         dom.modalContent.innerHTML = "";
 
         if (seasons.length === 0) {
@@ -1184,6 +1236,7 @@ async function showAllTimeStats() {
         }
         const statsData = await fetchJson(indexData.allTimeStats);
         if (dom.modalContent) {
+            prepareModalView();
             renderAllTimeStats(statsData, dom.modalContent);
         }
         openModal("Статистика за всё время");

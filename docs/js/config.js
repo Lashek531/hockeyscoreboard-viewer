@@ -17,7 +17,7 @@ const USE_DRIVE = true;
 const GLOBAL_INDEX_URL = USE_DRIVE ? DRIVE_INDEX_URL : LOCAL_INDEX_URL;
 
 // Версия интерфейса
-const UI_VERSION = "UI v0.24 (modal navigation)";
+const UI_VERSION = "UI v0.25 (full current-season ratings)";
 
 // Временная сезонная заставка. false возвращает обычное табло.
 const SEASON_SPLASH_ENABLED = true;

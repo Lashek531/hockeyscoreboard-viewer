@@ -989,11 +989,15 @@ async function showRatings(seasonOverride) {
             ratingByName.set(name, { name, base, delta, total, user_id });
         });
 
-        // 3) Итоговый список: только те, кто играл в сезоне
+        // 3) В текущем сезоне показываем весь стартовый рейтинг.
+        // Для архивных сезонов сохраняем список только сыгравших игроков.
         const rows = [];
-        for (const name of playedNames) {
+        const namesToShow = season.id === indexData.currentSeason
+            ? ratingByName.keys()
+            : playedNames;
+        for (const name of namesToShow) {
             const r = ratingByName.get(name);
-            if (!r) continue; // если нет в рейтингах — просто не показываем
+            if (!r) continue;
             rows.push(r);
         }
 

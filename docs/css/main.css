@@ -18,7 +18,7 @@ body {
 /* Временная заставка сезона 2026/27 */
 body.season-splash-active {
     padding: 0;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 .season-splash {
@@ -26,8 +26,9 @@ body.season-splash-active {
     min-height: 100vh;
     min-height: 100svh;
     overflow: hidden;
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     isolation: isolate;
     padding: clamp(28px, 6vw, 80px) 20px;
     background:
@@ -110,8 +111,206 @@ body.season-splash-active {
 
 .splash-content {
     width: min(880px, 100%);
+    margin: 0 auto;
     text-align: center;
     animation: splash-rise 0.8s ease-out both;
+}
+
+.splash-layout {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(32px, 6vh, 64px);
+    margin: auto;
+}
+
+.splash-chat {
+    border: 1px solid rgba(125, 211, 252, 0.26);
+    border-radius: 22px;
+    background: rgba(4, 15, 34, 0.76);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(18px);
+    text-align: left;
+    overflow: hidden;
+}
+
+.splash-chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px 13px;
+    border-bottom: 1px solid rgba(125, 211, 252, 0.14);
+}
+
+.splash-chat-kicker {
+    color: #7dd3fc;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.splash-chat-title {
+    margin-top: 3px;
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.splash-chat-write,
+.splash-comment-actions button {
+    cursor: pointer;
+    border-radius: 999px;
+    font: inherit;
+    font-weight: 700;
+}
+
+.splash-chat-write {
+    flex: none;
+    border: 1px solid rgba(125, 211, 252, 0.5);
+    padding: 9px 17px;
+    background: rgba(14, 116, 144, 0.32);
+    color: #e0f2fe;
+}
+
+.splash-chat-write:hover,
+.splash-chat-write:focus-visible {
+    background: rgba(14, 165, 233, 0.42);
+}
+
+.splash-chat-feed {
+    min-height: 72px;
+    max-height: 172px;
+    overflow-y: auto;
+    padding: 2px 20px 12px;
+    scrollbar-color: rgba(125, 211, 252, 0.45) transparent;
+}
+
+.splash-chat-empty {
+    padding: 18px 0 6px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.splash-chat-message {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.splash-chat-message:last-child {
+    border-bottom: 0;
+}
+
+.splash-chat-author {
+    color: #7dd3fc;
+    font-weight: 750;
+}
+
+.splash-chat-time {
+    margin-left: 10px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.splash-chat-text {
+    margin-top: 3px;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.splash-comment-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(2, 6, 23, 0.82);
+    backdrop-filter: blur(8px);
+}
+
+.splash-comment-card {
+    width: min(460px, 100%);
+    max-height: calc(100svh - 32px);
+    overflow-y: auto;
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    border-radius: 22px;
+    padding: 24px;
+    background: #0b1930;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.splash-comment-card h2 {
+    margin: 0 0 22px;
+    font-size: 25px;
+}
+
+.splash-comment-card label {
+    display: block;
+    margin: 14px 0 7px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.splash-comment-card input,
+.splash-comment-card textarea {
+    display: block;
+    width: 100%;
+    border: 1px solid #496078;
+    border-radius: 12px;
+    padding: 11px 13px;
+    background: #081223;
+    color: #f8fafc;
+    font: inherit;
+}
+
+.splash-comment-card textarea {
+    resize: vertical;
+    min-height: 110px;
+}
+
+.splash-comment-card input:focus,
+.splash-comment-card textarea:focus {
+    outline: 2px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+.splash-comment-status {
+    min-height: 22px;
+    margin-top: 10px;
+    color: #fca5a5;
+    font-size: 13px;
+}
+
+.splash-comment-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.splash-comment-actions button {
+    border: 1px solid #496078;
+    padding: 10px 17px;
+    background: transparent;
+    color: #e2e8f0;
+}
+
+.splash-comment-actions button[type="submit"] {
+    border-color: #38bdf8;
+    background: #0284c7;
+    color: white;
+}
+
+.splash-comment-actions button:disabled {
+    cursor: wait;
+    opacity: 0.65;
 }
 
 .splash-kicker {
@@ -146,6 +345,81 @@ body.season-splash-active {
     color: #fca5a5;
     font-weight: 800;
     text-shadow: 0 0 22px rgba(239, 68, 68, 0.3);
+}
+
+.splash-countdown {
+    width: min(620px, 100%);
+    margin: 28px auto 0;
+    padding: 17px 20px 20px;
+    border: 1px solid rgba(125, 211, 252, 0.36);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(9, 39, 69, 0.88), rgba(8, 18, 40, 0.86));
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(16px);
+}
+
+.splash-countdown-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    color: #cbd5e1;
+    font-size: 13px;
+}
+
+.splash-countdown-caption {
+    color: #7dd3fc;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.splash-countdown-top time {
+    white-space: nowrap;
+}
+
+.splash-countdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.splash-countdown-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 94px;
+    padding: 9px 3px 7px;
+    border: 1px solid rgba(125, 211, 252, 0.14);
+    border-radius: 14px;
+    background: rgba(2, 6, 23, 0.42);
+}
+
+.splash-countdown-value {
+    color: #f8fafc;
+    font-size: clamp(34px, 5vw, 50px);
+    font-weight: 850;
+    line-height: 1;
+    letter-spacing: -0.055em;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 24px rgba(125, 211, 252, 0.26);
+}
+
+.splash-countdown-label {
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 12px;
+    line-height: 1;
+}
+
+.splash-countdown-finished {
+    padding: 24px 0 8px;
+    color: #e0f2fe;
+    font-size: clamp(30px, 5vw, 45px);
+    font-weight: 800;
+    text-shadow: 0 0 24px rgba(56, 189, 248, 0.45);
 }
 
 .splash-copy {
@@ -221,8 +495,49 @@ body.season-splash-active {
         max-width: 34rem;
     }
 
+    .splash-countdown {
+        padding: 14px 11px 12px;
+    }
+
+    .splash-countdown-top {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+    }
+
+    .splash-countdown-grid {
+        gap: 5px;
+        margin-top: 12px;
+    }
+
+    .splash-countdown-unit {
+        min-height: 79px;
+    }
+
+    .splash-countdown-value {
+        font-size: clamp(29px, 8vw, 42px);
+    }
+
+    .splash-countdown-label {
+        font-size: 11px;
+    }
+
     .splash-puck {
         opacity: 0.65;
+    }
+
+    .splash-chat-header {
+        padding: 13px 15px;
+    }
+
+    .splash-chat-title {
+        font-size: 15px;
+    }
+
+    .splash-chat-feed {
+        max-height: 152px;
+        padding-inline: 15px;
     }
 }
 

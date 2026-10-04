@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Пестово Арена — сезон 2026/27</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/main.css?v=0.24">
+    <link rel="stylesheet" href="css/main.css?v=0.27">
 </head>
 
 <body>
@@ -19,22 +19,67 @@
             <div class="rink-faceoff rink-faceoff-right"></div>
         </div>
 
-        <div class="splash-content">
-            <div class="splash-kicker">Пестово Арена</div>
-            <h1 id="seasonSplashTitle">Лёд зовёт!</h1>
-            <div class="splash-season">Скоро открытие сезона <strong>2026/27</strong></div>
-            <p class="splash-copy">
-                Готовим команды, обновляем статистику и настраиваем табло.
-                Новый сезон — новые скорости, новые голы, новая история!
-            </p>
-            <div class="splash-status">
-                <span class="splash-status-dot" aria-hidden="true"></span>
-                Готовимся к старту
+        <div class="splash-layout">
+            <div class="splash-content">
+                <div class="splash-kicker">Пестово Арена</div>
+                <h1 id="seasonSplashTitle">Лёд зовёт!</h1>
+                <div class="splash-season"><span id="splashSeasonIntro">Скоро открытие сезона</span> <strong>2026/27</strong></div>
+                <div class="splash-countdown" id="seasonCountdown" aria-label="Обратный отсчёт до начала сезона">
+                    <div class="splash-countdown-top">
+                        <span class="splash-countdown-caption" id="seasonCountdownCaption">До первой шайбы</span>
+                        <time datetime="2026-11-20T20:15:00+03:00">Пятница, 20.11.2026 · 20:15 МСК</time>
+                    </div>
+                    <div class="splash-countdown-grid" id="seasonCountdownGrid">
+                        <div class="splash-countdown-unit"><span class="splash-countdown-value" id="countdownDays">--</span><span class="splash-countdown-label" id="countdownDaysLabel">дней</span></div>
+                        <div class="splash-countdown-unit"><span class="splash-countdown-value" id="countdownHours">--</span><span class="splash-countdown-label" id="countdownHoursLabel">часов</span></div>
+                        <div class="splash-countdown-unit"><span class="splash-countdown-value" id="countdownMinutes">--</span><span class="splash-countdown-label" id="countdownMinutesLabel">минут</span></div>
+                        <div class="splash-countdown-unit"><span class="splash-countdown-value" id="countdownSeconds">--</span><span class="splash-countdown-label" id="countdownSecondsLabel">секунд</span></div>
+                    </div>
+                    <div class="splash-countdown-finished" id="seasonCountdownFinished" hidden>Сезон открыт</div>
+                </div>
+                <p class="splash-copy">
+                    Готовим команды, обновляем статистику и настраиваем табло.
+                    Новый сезон — новые скорости, новые голы, новая история!
+                </p>
+                <div class="splash-status">
+                    <span class="splash-status-dot" aria-hidden="true"></span>
+                    <span id="splashStatusText">Готовимся к старту</span>
+                </div>
             </div>
+
+            <section class="splash-chat" aria-label="Лента комментариев">
+                <div class="splash-chat-header">
+                    <div>
+                        <div class="splash-chat-kicker">У борта</div>
+                        <div class="splash-chat-title">Разговоры перед сезоном</div>
+                    </div>
+                    <button class="splash-chat-write" id="splashCommentOpen" type="button">Написать</button>
+                </div>
+                <div class="splash-chat-feed" id="splashCommentFeed" role="log" aria-label="Сообщения">
+                    <div class="splash-chat-empty">Загружаем сообщения…</div>
+                </div>
+            </section>
         </div>
 
         <div class="splash-puck" aria-hidden="true"></div>
     </main>
+
+    <div class="splash-comment-dialog" id="splashCommentDialog" hidden>
+        <div class="splash-comment-card" role="dialog" aria-modal="true" aria-labelledby="splashCommentTitle">
+            <form id="splashCommentForm">
+                <h2 id="splashCommentTitle">Написать у борта</h2>
+                <label for="splashCommentAuthor">Подпись</label>
+                <input id="splashCommentAuthor" name="author" type="text" maxlength="32" required placeholder="Как тебя подписать?">
+                <label for="splashCommentText">Сообщение</label>
+                <textarea id="splashCommentText" name="text" rows="4" maxlength="500" required placeholder="Что скажешь?"></textarea>
+                <div class="splash-comment-status" id="splashCommentStatus" role="status" aria-live="polite"></div>
+                <div class="splash-comment-actions">
+                    <button id="splashCommentCancel" type="button">Отмена</button>
+                    <button id="splashCommentSubmit" type="submit">Отправить</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- Модальное окно для списков и протоколов -->
     <div class="modal-backdrop" id="modalBackdrop">
@@ -116,7 +161,9 @@
     </div>
 
     <!-- порядок важен: сначала config, потом app -->
-    <script src="js/config.js?v=0.25"></script>
+    <script src="js/config.js?v=0.27"></script>
     <script src="js/app.js?v=0.25"></script>
+    <script src="js/splash-comments.js?v=0.27"></script>
+    <script src="js/splash-countdown.js?v=0.27"></script>
 </body>
 </html>

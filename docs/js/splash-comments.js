@@ -17,6 +17,8 @@
 
     let loading = false;
     let renderedIds = null;
+    let serverComments = [];
+    let pendingComments = [];
 
     function showFeedMessage(message) {
         const empty = document.createElement("div");
@@ -35,19 +37,21 @@
     }
 
     function renderComments(comments) {
-        const ids = comments.map(comment => comment.id).join("|");
+        serverComments = comments;
+        const serverIds = new Set(comments.map(comment => comment.id));
+        pendingComments = pendingComments.filter(comment => !serverIds.has(comment.id));
+        const visibleComments = comments.concat(pendingComments);
+        const ids = visibleComments.map(comment => comment.id).join("|");
         if (ids === renderedIds) return;
         renderedIds = ids;
 
-        if (comments.length === 0) {
+        if (visibleComments.length === 0) {
             showFeedMessage("Пока тихо. Начни разговор первым.");
             return;
         }
 
-        const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 32;
-        const scrollPosition = feed.scrollTop;
         const fragment = document.createDocumentFragment();
-        for (const comment of comments) {
+        for (const comment of visibleComments.slice().reverse()) {
             const item = document.createElement("div");
             item.className = "splash-chat-message";
 
@@ -69,7 +73,7 @@
             fragment.appendChild(item);
         }
         feed.replaceChildren(fragment);
-        feed.scrollTop = nearBottom ? feed.scrollHeight : scrollPosition;
+        feed.scrollTop = 0;
     }
 
     async function refreshComments() {
@@ -126,9 +130,13 @@
                 body: JSON.stringify({ author, text })
             });
             if (!response.ok) throw new Error("HTTP " + response.status);
+            const posted = await response.json();
+            if (!posted || !posted.id) throw new Error("Invalid response");
+            pendingComments.push(posted);
+            renderComments(serverComments);
             textInput.value = "";
             closeDialog();
-            await refreshComments();
+            refreshComments();
         } catch (error) {
             console.error("Could not post splash comment", error);
             status.textContent = "Не отправилось. Попробуй ещё раз.";

@@ -114,26 +114,62 @@ body.season-splash-active {
     margin: 0 auto;
     text-align: center;
     animation: splash-rise 0.8s ease-out both;
+    grid-area: hero;
 }
 
 .splash-layout {
     position: relative;
     z-index: 1;
-    width: min(920px, 100%);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(32px, 6vh, 64px);
+    width: min(1180px, 100%);
+    display: grid;
+    grid-template-areas: "hero" "chat" "outro";
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(22px, 4vh, 38px);
     margin: auto;
 }
 
+.splash-outro {
+    grid-area: outro;
+    text-align: center;
+}
+
 .splash-chat {
-    border: 1px solid rgba(125, 211, 252, 0.26);
-    border-radius: 22px;
-    background: rgba(4, 15, 34, 0.76);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(18px);
+    grid-area: chat;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 320px;
+    border: 2px solid rgba(242, 248, 252, 0.94);
+    border-radius: 19px;
+    background: linear-gradient(160deg, rgba(244, 249, 252, 0.98), rgba(204, 224, 238, 0.96));
+    box-shadow: 0 22px 65px rgba(0, 0, 0, 0.35), inset 0 0 0 5px rgba(255, 255, 255, 0.35);
+    color: #102b43;
     text-align: left;
     overflow: hidden;
+}
+
+.splash-chat::before,
+.splash-chat::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.splash-chat::before {
+    top: 0;
+    height: 11px;
+    background: linear-gradient(90deg, #11395a 0 72%, #c92b3b 72% 100%);
+}
+
+.splash-chat::after {
+    bottom: 0;
+    height: 13px;
+    background: linear-gradient(90deg, #b62033, #ed5061 50%, #b62033);
+    box-shadow: 0 -3px 9px rgba(111, 22, 34, 0.2);
 }
 
 .splash-chat-header {
@@ -141,22 +177,23 @@ body.season-splash-active {
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 20px 13px;
-    border-bottom: 1px solid rgba(125, 211, 252, 0.14);
+    padding: 26px 18px 15px;
+    border-bottom: 2px solid rgba(13, 74, 115, 0.16);
 }
 
 .splash-chat-kicker {
-    color: #7dd3fc;
+    color: #175d89;
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
 }
 
 .splash-chat-title {
     margin-top: 3px;
-    font-size: 17px;
-    font-weight: 750;
+    color: #102b43;
+    font-size: 19px;
+    font-weight: 800;
 }
 
 .splash-chat-write,
@@ -169,56 +206,58 @@ body.season-splash-active {
 
 .splash-chat-write {
     flex: none;
-    border: 1px solid rgba(125, 211, 252, 0.5);
-    padding: 9px 17px;
-    background: rgba(14, 116, 144, 0.32);
-    color: #e0f2fe;
+    border: 1px solid #123f61;
+    padding: 9px 15px;
+    background: #123f61;
+    color: white;
+    font-size: 13px;
 }
 
 .splash-chat-write:hover,
 .splash-chat-write:focus-visible {
-    background: rgba(14, 165, 233, 0.42);
+    background: #1b628e;
 }
 
 .splash-chat-feed {
     min-height: 72px;
-    max-height: 172px;
+    max-height: 225px;
     overflow-y: auto;
-    padding: 2px 20px 12px;
-    scrollbar-color: rgba(125, 211, 252, 0.45) transparent;
+    padding: 8px 18px 22px;
+    scrollbar-color: rgba(22, 82, 119, 0.5) transparent;
 }
 
 .splash-chat-empty {
-    padding: 18px 0 6px;
-    color: #94a3b8;
+    padding: 18px 0;
+    color: #536e82;
     font-size: 14px;
 }
 
 .splash-chat-message {
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    margin-top: 10px;
+    padding: 11px 13px;
+    border: 1px solid rgba(26, 76, 111, 0.18);
+    border-left: 4px solid #c92b3b;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.73);
+    box-shadow: 0 4px 10px rgba(19, 57, 85, 0.08);
     font-size: 14px;
     line-height: 1.45;
 }
 
-.splash-chat-message:last-child {
-    border-bottom: 0;
-}
-
 .splash-chat-author {
-    color: #7dd3fc;
+    color: #16577f;
     font-weight: 750;
 }
 
 .splash-chat-time {
     margin-left: 10px;
-    color: #94a3b8;
+    color: #5f7484;
     font-size: 11px;
 }
 
 .splash-chat-text {
-    margin-top: 3px;
-    color: #e2e8f0;
+    margin-top: 5px;
+    color: #173247;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
@@ -486,6 +525,56 @@ body.season-splash-active {
     50% { transform: translateX(-18px) rotate(-6deg); }
 }
 
+@media (min-width: 980px) {
+    .splash-layout {
+        grid-template-areas: "hero chat" "outro chat";
+        grid-template-columns: minmax(0, 1.5fr) minmax(350px, 0.9fr);
+        column-gap: clamp(28px, 4vw, 60px);
+        row-gap: 20px;
+    }
+
+    .splash-content,
+    .splash-outro {
+        margin: 0;
+        text-align: left;
+    }
+
+    .splash-content h1 {
+        font-size: clamp(64px, 7vw, 102px);
+    }
+
+    .splash-season {
+        margin-top: 28px;
+        font-size: clamp(24px, 2.7vw, 36px);
+    }
+
+    .splash-countdown {
+        margin: 24px 0 0;
+    }
+
+    .splash-copy {
+        margin: 0;
+        font-size: clamp(16px, 1.5vw, 20px);
+    }
+
+    .splash-status {
+        margin-top: 22px;
+    }
+
+    .splash-chat {
+        align-self: center;
+        height: min(75svh, 560px);
+        min-height: 380px;
+        max-height: none;
+    }
+
+    .splash-chat-feed {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+    }
+}
+
 @media (max-width: 620px) {
     .season-splash {
         padding-inline: 18px;
@@ -528,7 +617,7 @@ body.season-splash-active {
     }
 
     .splash-chat-header {
-        padding: 13px 15px;
+        padding: 23px 15px 12px;
     }
 
     .splash-chat-title {
@@ -536,7 +625,7 @@ body.season-splash-active {
     }
 
     .splash-chat-feed {
-        max-height: 152px;
+        max-height: 200px;
         padding-inline: 15px;
     }
 }

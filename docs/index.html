@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Пестово Арена — сезон 2026/27</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/main.css?v=0.27">
+    <link rel="stylesheet" href="css/main.css?v=0.28">
 </head>
 
 <body>
@@ -37,6 +37,22 @@
                     </div>
                     <div class="splash-countdown-finished" id="seasonCountdownFinished" hidden>Сезон открыт</div>
                 </div>
+            </div>
+
+            <section class="splash-chat" aria-label="Разговоры у борта">
+                <div class="splash-chat-header">
+                    <div>
+                        <div class="splash-chat-kicker">Живой борт</div>
+                        <div class="splash-chat-title">Разговоры у борта</div>
+                    </div>
+                    <button class="splash-chat-write" id="splashCommentOpen" type="button">Написать</button>
+                </div>
+                <div class="splash-chat-feed" id="splashCommentFeed" role="log" aria-label="Сообщения">
+                    <div class="splash-chat-empty">Загружаем сообщения…</div>
+                </div>
+            </section>
+
+            <div class="splash-outro">
                 <p class="splash-copy">
                     Готовим команды, обновляем статистику и настраиваем табло.
                     Новый сезон — новые скорости, новые голы, новая история!
@@ -46,19 +62,6 @@
                     <span id="splashStatusText">Готовимся к старту</span>
                 </div>
             </div>
-
-            <section class="splash-chat" aria-label="Лента комментариев">
-                <div class="splash-chat-header">
-                    <div>
-                        <div class="splash-chat-kicker">У борта</div>
-                        <div class="splash-chat-title">Разговоры перед сезоном</div>
-                    </div>
-                    <button class="splash-chat-write" id="splashCommentOpen" type="button">Написать</button>
-                </div>
-                <div class="splash-chat-feed" id="splashCommentFeed" role="log" aria-label="Сообщения">
-                    <div class="splash-chat-empty">Загружаем сообщения…</div>
-                </div>
-            </section>
         </div>
 
         <div class="splash-puck" aria-hidden="true"></div>
@@ -161,9 +164,9 @@
     </div>
 
     <!-- порядок важен: сначала config, потом app -->
-    <script src="js/config.js?v=0.27"></script>
+    <script src="js/config.js?v=0.28"></script>
     <script src="js/app.js?v=0.25"></script>
-    <script src="js/splash-comments.js?v=0.27"></script>
+    <script src="js/splash-comments.js?v=0.28"></script>
     <script src="js/splash-countdown.js?v=0.27"></script>
 </body>
 </html>

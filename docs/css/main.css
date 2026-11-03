@@ -1200,3 +1200,6 @@ body.season-splash-active {
     padding: 1px 0;
     opacity: 0.9;
 }
+
+.arena-photo { width: min(100%, 360px); margin: 24px auto; }
+.arena-photo img { display: block; width: 100%; height: auto; border-radius: 16px; }

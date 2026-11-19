@@ -2,7 +2,7 @@
     const splash = document.getElementById("seasonSplash");
     if (!splash || splash.hidden) return;
 
-    const target = new Date("2026-11-20T20:15:00+03:00").getTime();
+    const target = new Date("2026-11-27T20:15:00+03:00").getTime();
     const units = [
         { value: "countdownDays", label: "countdownDaysLabel", forms: ["день", "дня", "дней"] },
         { value: "countdownHours", label: "countdownHoursLabel", forms: ["час", "часа", "часов"] },

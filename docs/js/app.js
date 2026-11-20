@@ -1284,7 +1284,7 @@ async function loadAndRenderActiveGame() {
         firstActiveLoad = false;
     } catch (e) {
         console.error(e);
-        if (scoreboardPreviewEnabled && /HTTP 404\b/.test(e.message)) {
+        if (/HTTP 404\b/.test(e.message)) {
             if (dom.stateMessage) {
                 dom.stateMessage.classList.remove("error", "loading");
                 dom.stateMessage.textContent = "Активный матч пока не создан";

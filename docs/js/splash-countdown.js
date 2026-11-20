@@ -1,8 +1,12 @@
 (() => {
     const splash = document.getElementById("seasonSplash");
-    if (!splash || splash.hidden) return;
+    const countdown = document.getElementById("seasonCountdown");
+    if (!splash || !countdown) return;
 
-    const target = new Date("2026-11-27T20:15:00+03:00").getTime();
+    const target = Date.parse(countdown.querySelector("time")?.dateTime);
+    if (!Number.isFinite(target)) return;
+    const onScoreboard = splash.hidden;
+
     const units = [
         { value: "countdownDays", label: "countdownDaysLabel", forms: ["день", "дня", "дней"] },
         { value: "countdownHours", label: "countdownHoursLabel", forms: ["час", "часа", "часов"] },
@@ -12,6 +16,12 @@
     const grid = document.getElementById("seasonCountdownGrid");
     const finished = document.getElementById("seasonCountdownFinished");
     if (!grid || !finished || units.some(unit => !document.getElementById(unit.value) || !document.getElementById(unit.label))) return;
+
+    if (onScoreboard) {
+        const scoreboard = document.querySelector("#scoreboardPage:not([hidden]) > .scoreboard");
+        if (!scoreboard || Date.now() >= target) return;
+        scoreboard.after(countdown);
+    }
 
     function wordForm(number, forms) {
         const lastTwo = number % 100;
@@ -25,14 +35,18 @@
     function updateCountdown() {
         const remaining = target - Date.now();
         if (remaining <= 0) {
-            grid.hidden = true;
-            finished.hidden = false;
-            const intro = document.getElementById("splashSeasonIntro");
-            const status = document.getElementById("splashStatusText");
-            const caption = document.getElementById("seasonCountdownCaption");
-            if (intro) intro.textContent = "Сезон";
-            if (status) status.textContent = "Лёд открыт";
-            if (caption) caption.textContent = "Время пришло";
+            if (onScoreboard) {
+                countdown.hidden = true;
+            } else {
+                grid.hidden = true;
+                finished.hidden = false;
+                const intro = document.getElementById("splashSeasonIntro");
+                const status = document.getElementById("splashStatusText");
+                const caption = document.getElementById("seasonCountdownCaption");
+                if (intro) intro.textContent = "Сезон";
+                if (status) status.textContent = "Лёд открыт";
+                if (caption) caption.textContent = "Время пришло";
+            }
             clearInterval(timer);
             return;
         }

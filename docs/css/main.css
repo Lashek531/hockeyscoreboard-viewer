@@ -646,6 +646,10 @@ body.season-splash-active {
     min-height: 100vh; /* растягиваем по высоте экрана */
 }
 
+.page > .splash-countdown {
+    margin: 0 auto;
+}
+
 /* Нижняя панель: меню + футер прижаты к низу */
 .bottom-panel {
     margin-top: auto;              /* толкаем панель к низу */
